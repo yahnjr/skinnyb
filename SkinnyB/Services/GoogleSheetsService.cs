@@ -44,6 +44,32 @@ public class GoogleSheetsService
         });
     }
 
+    public async Task InitialiseWithRefreshTokenAsync(string credentialsJson, string refreshToken)
+    {
+        using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(credentialsJson));
+        var secrets = GoogleClientSecrets.FromStream(stream).Secrets;
+
+        var token = new Google.Apis.Auth.OAuth2.Responses.TokenResponse
+        {
+            RefreshToken = refreshToken
+        };
+
+        var flow = new Google.Apis.Auth.OAuth2.Flows.GoogleAuthorizationCodeFlow(
+            new Google.Apis.Auth.OAuth2.Flows.GoogleAuthorizationCodeFlow.Initializer
+            {
+                ClientSecrets = secrets,
+                Scopes = Scopes
+            });
+
+        var credential = new UserCredential(flow, "user", token);
+
+        _service = new SheetsService(new BaseClientService.Initializer
+        {
+            HttpClientInitializer = credential,
+            ApplicationName = AppName
+        });
+    }
+
     // Public API
 
     public async Task<List<WeekEntry>> GetWeekEntriesAsync(int maxRows = 15)
@@ -751,12 +777,28 @@ public class GoogleSheetsService
 
         var secrets = GoogleClientSecrets.FromStream(jsonStream).Secrets;
 
+        // Try to read from secure storage first (set via UI), then fallback to environment variable
+        string? refreshToken = null;
+        try
+        {
+            refreshToken = await SecureStorage.Default.GetAsync("google_refresh_token");
+        }
+        catch
+        {
+            // Silently ignore secure storage errors
+        }
+
+        refreshToken ??= Environment.GetEnvironmentVariable("GOOGLE_REFRESH_TOKEN");
+
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            throw new InvalidOperationException(
+                "No refresh token found. Please save a refresh token via the Stats page.");
+        }
+
         var token = new Google.Apis.Auth.OAuth2.Responses.TokenResponse
         {
-            // Read RefreshToken from environment variable or configuration
-            // This should be set in appsettings.Development.json or environment
-            RefreshToken = Environment.GetEnvironmentVariable("GOOGLE_REFRESH_TOKEN") 
-                ?? throw new InvalidOperationException("GOOGLE_REFRESH_TOKEN environment variable not set. Set it in your appsettings.Development.json or environment.")
+            RefreshToken = refreshToken
         };
 
         var credential = new UserCredential(

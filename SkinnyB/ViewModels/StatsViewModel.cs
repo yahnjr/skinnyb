@@ -35,6 +35,17 @@ public class StatsViewModel : INotifyPropertyChanged
     }
     public bool HasSuccess => !string.IsNullOrWhiteSpace(SuccessMessage);
 
+    private const string RefreshTokenKey = "google_refresh_token";
+
+    private string _refreshToken = string.Empty;
+    public string RefreshToken
+    {
+        get => _refreshToken;
+        set { _refreshToken = value; OnPropertyChanged(); }
+    }
+
+    public ICommand SaveRefreshTokenCommand { get; }
+
     // ── Meta display ──────────────────────────────────────────────────────
 
     private MetaEntry _meta = new();
@@ -107,6 +118,7 @@ public class StatsViewModel : INotifyPropertyChanged
 
         RefreshCommand = new Command(async () => await LoadDataAsync());
         SaveGoalsCommand = new Command(async () => await SaveGoalsAsync());
+        SaveRefreshTokenCommand = new Command(async () => await SaveRefreshTokenAsync());
 
         IncrementNutritionCommand = new Command(() => NutritionGoal++);
         DecrementNutritionCommand = new Command(() => NutritionGoal--);
@@ -114,6 +126,8 @@ public class StatsViewModel : INotifyPropertyChanged
         DecrementExerciseCommand = new Command(() => ExerciseGoal--);
         IncrementAlcoholCommand = new Command(() => AlcoholGoal++);
         DecrementAlcoholCommand = new Command(() => AlcoholGoal--);
+
+        LoadSavedRefreshToken();
     }
 
     // ── Data loading ──────────────────────────────────────────────────────
@@ -189,6 +203,49 @@ public class StatsViewModel : INotifyPropertyChanged
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    // ── Saving refresh token ──────────────────────────────────────────────
+
+    private async Task SaveRefreshTokenAsync()
+    {
+        if (string.IsNullOrWhiteSpace(RefreshToken))
+        {
+            ErrorMessage = "Refresh token cannot be empty.";
+            return;
+        }
+
+        try
+        {
+            await SecureStorage.Default.SetAsync(RefreshTokenKey, RefreshToken);
+            SuccessMessage = "Refresh token saved!";
+
+            // Clear message after 2 s
+            _ = Task.Delay(2000).ContinueWith(_ =>
+            {
+                SuccessMessage = null;
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to save token: {ex.Message}";
+        }
+    }
+
+    private void LoadSavedRefreshToken()
+    {
+        try
+        {
+            var saved = SecureStorage.Default.GetAsync(RefreshTokenKey).Result;
+            if (!string.IsNullOrEmpty(saved))
+            {
+                RefreshToken = saved;
+            }
+        }
+        catch
+        {
+            // Silently fail if no token is saved
         }
     }
 

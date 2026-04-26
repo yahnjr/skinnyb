@@ -47,7 +47,7 @@ public partial class StatsPage : ContentPage
         }
     }
 
-    // Keeps graphu up to date with theme changes
+    // Keeps graph up to date with theme changes
     private void UpdateDrawableTheme()
     {
         bool isDark = Application.Current?.RequestedTheme == AppTheme.Dark;
