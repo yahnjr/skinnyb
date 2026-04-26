@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="SkinnyB.Pages.StatsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:SkinnyB.Controls"
+    xmlns:vm="clr-namespace:SkinnyB.ViewModels"
+    Title="Stats"
+    BackgroundColor="{AppThemeBinding Light=#F5F5F0, Dark=#111110}">
+
+    <ContentPage.Resources>
+        <Color x:Key="Surface">#FFFFFF</Color>
+        <Color x:Key="SurfaceDark">#1C1C1A</Color>
+        <Color x:Key="Accent">#2D6A4F</Color>
+        <Color x:Key="AccentLight">#52B788</Color>
+        <Color x:Key="Muted">#888880</Color>
+        <Color x:Key="Danger">#C0392B</Color>
+        <Color x:Key="Success">#2D6A4F</Color>
+
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+            <Setter Property="Stroke" Value="Transparent" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Margin" Value="0,0,0,16" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow Brush="#22000000" Opacity="1" Radius="8" Offset="0,2" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SectionTitle" TargetType="Label">
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#111110, Dark=#F0EFE9}" />
+        </Style>
+
+        <Style x:Key="MetaLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="{StaticResource Muted}" />
+        </Style>
+
+        <Style x:Key="MetaValue" TargetType="Label">
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#111110, Dark=#F0EFE9}" />
+        </Style>
+
+        <!-- Stepper button -->
+        <Style x:Key="StepBtn" TargetType="Button">
+            <Setter Property="WidthRequest" Value="36" />
+            <Setter Property="HeightRequest" Value="36" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#EBEBEB, Dark=#2A2A28}" />
+            <Setter Property="TextColor" Value="{StaticResource Accent}" />
+        </Style>
+
+        <Style x:Key="GoalValue" TargetType="Label">
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="WidthRequest" Value="36" />
+            <Setter Property="HorizontalTextAlignment" Value="Center" />
+            <Setter Property="VerticalTextAlignment" Value="Center" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#111110, Dark=#F0EFE9}" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,32" Spacing="0">
+
+            <!-- Page title -->
+            <Label
+                FontAttributes="Bold"
+                FontSize="28"
+                Margin="0,0,0,4"
+                Text="Stats"
+                TextColor="{AppThemeBinding Light=#111110, Dark=#F0EFE9}" />
+            <Label
+                FontSize="14"
+                Margin="0,0,0,20"
+                Text="Overview &amp; settings"
+                TextColor="{StaticResource Muted}" />
+
+            <!-- Loading indicator -->
+            <ActivityIndicator
+                IsRunning="{Binding IsLoading}"
+                IsVisible="{Binding IsLoading}"
+                Color="{StaticResource Accent}"
+                Margin="0,0,0,16" />
+
+            <!-- Error banner -->
+            <Border
+                Margin="0,0,0,16"
+                Padding="14,10"
+                BackgroundColor="#FDF0EE"
+                IsVisible="{Binding HasError}"
+                Stroke="#E8B4AD"
+                StrokeShape="RoundRectangle 8">
+                <Label FontSize="13" Text="{Binding ErrorMessage}" TextColor="{StaticResource Danger}" />
+            </Border>
+
+            <!-- Success banner -->
+            <Border
+                Margin="0,0,0,16"
+                Padding="14,10"
+                BackgroundColor="#EDF7F1"
+                IsVisible="{Binding HasSuccess}"
+                Stroke="#A8D5A2"
+                StrokeShape="RoundRectangle 8">
+                <Label FontSize="13" Text="{Binding SuccessMessage}" TextColor="{StaticResource Success}" />
+            </Border>
+
+            <!-- ── Overview card ────────────────────────────────── -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="0">
+                    <Label Style="{StaticResource SectionTitle}" Text="Overview" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+
+                        <!-- Current weight -->
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label Style="{StaticResource MetaLabel}" Text="CURRENT WEIGHT" />
+                            <Label Style="{StaticResource MetaValue}" Text="{Binding CurrentWeightDisplay}" />
+                        </VerticalStackLayout>
+
+                        <!-- All-time score -->
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Style="{StaticResource MetaLabel}" Text="ALL-TIME AVG SCORE" />
+                            <Label Style="{StaticResource MetaValue}" Text="{Binding AllTimeScoreDisplay}" />
+                        </VerticalStackLayout>
+
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ── Goals card ─────────────────────────────────────── -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="0">
+                    <Label Style="{StaticResource SectionTitle}" Text="Weekly Goals" />
+                    <Label
+                        FontSize="12"
+                        Margin="0,0,0,14"
+                        Text="Days per week each habit needs to be hit to turn green."
+                        TextColor="{StaticResource Muted}" />
+
+                    <!-- Nutrition -->
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+                        <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="2">
+                            <Label FontSize="13" FontAttributes="Bold"
+                                   Text="🥗  Nutrition"
+                                   TextColor="{AppThemeBinding Light=#333330, Dark=#DDDDD0}" />
+                            <Label FontSize="11" Text="days / week" TextColor="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                        <Grid Grid.Column="1" ColumnDefinitions="36,36,36" ColumnSpacing="4" VerticalOptions="Center">
+                            <Button Grid.Column="0" Style="{StaticResource StepBtn}" Text="−"
+                                    Command="{Binding DecrementNutritionCommand}" />
+                            <Label  Grid.Column="1" Style="{StaticResource GoalValue}"
+                                    Text="{Binding NutritionGoal}" />
+                            <Button Grid.Column="2" Style="{StaticResource StepBtn}" Text="+"
+                                    Command="{Binding IncrementNutritionCommand}" />
+                        </Grid>
+                    </Grid>
+
+                    <!-- Exercise -->
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+                        <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="2">
+                            <Label FontSize="13" FontAttributes="Bold"
+                                   Text="🏃  Exercise"
+                                   TextColor="{AppThemeBinding Light=#333330, Dark=#DDDDD0}" />
+                            <Label FontSize="11" Text="days / week" TextColor="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                        <Grid Grid.Column="1" ColumnDefinitions="36,36,36" ColumnSpacing="4" VerticalOptions="Center">
+                            <Button Grid.Column="0" Style="{StaticResource StepBtn}" Text="−"
+                                    Command="{Binding DecrementExerciseCommand}" />
+                            <Label  Grid.Column="1" Style="{StaticResource GoalValue}"
+                                    Text="{Binding ExerciseGoal}" />
+                            <Button Grid.Column="2" Style="{StaticResource StepBtn}" Text="+"
+                                    Command="{Binding IncrementExerciseCommand}" />
+                        </Grid>
+                    </Grid>
+
+                    <!-- Alcohol -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="2">
+                            <Label FontSize="13" FontAttributes="Bold"
+                                   Text="🍷  Avoid Alcohol"
+                                   TextColor="{AppThemeBinding Light=#333330, Dark=#DDDDD0}" />
+                            <Label FontSize="11" Text="days / week" TextColor="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                        <Grid Grid.Column="1" ColumnDefinitions="36,36,36" ColumnSpacing="4" VerticalOptions="Center">
+                            <Button Grid.Column="0" Style="{StaticResource StepBtn}" Text="−"
+                                    Command="{Binding DecrementAlcoholCommand}" />
+                            <Label  Grid.Column="1" Style="{StaticResource GoalValue}"
+                                    Text="{Binding AlcoholGoal}" />
+                            <Button Grid.Column="2" Style="{StaticResource StepBtn}" Text="+"
+                                    Command="{Binding IncrementAlcoholCommand}" />
+                        </Grid>
+                    </Grid>
+
+                    <!-- Save goals -->
+                    <Button
+                        Margin="0,18,0,0"
+                        BackgroundColor="{StaticResource Accent}"
+                        Command="{Binding SaveGoalsCommand}"
+                        CornerRadius="10"
+                        Text="Save goals"
+                        TextColor="White" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ── Weight graph card ──────────────────────────────── -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="0">
+                    <Label Style="{StaticResource SectionTitle}" Text="Weight history" />
+
+                    <!-- No data fallback -->
+                    <Label
+                        FontSize="14"
+                        HorizontalTextAlignment="Center"
+                        IsVisible="{Binding HasNoWeightData}"
+                        Margin="0,20"
+                        Text="Not enough weight data yet."
+                        TextColor="{StaticResource Muted}" />
+
+                    <!-- Graph -->
+                    <GraphicsView
+                        x:Name="WeightGraph"
+                        HeightRequest="200"
+                        IsVisible="{Binding HasWeightData}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Refresh -->
+            <Button
+                BackgroundColor="{AppThemeBinding Light=#F5F5F0, Dark=#2A2A28}"
+                BorderColor="{StaticResource Accent}"
+                BorderWidth="1"
+                Command="{Binding RefreshCommand}"
+                CornerRadius="10"
+                Text="Refresh"
+                TextColor="{StaticResource Accent}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

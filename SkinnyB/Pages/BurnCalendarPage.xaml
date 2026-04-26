@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="SkinnyB.Pages.BurnCalendarPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:SkinnyB.ViewModels"
+    BackgroundColor="{AppThemeBinding Light=#F5F5F0,
+                                      Dark=#111110}">
+
+    <ContentPage.Resources>
+        <Color x:Key="Surface">#FFFFFF</Color>
+        <Color x:Key="SurfaceDark">#1C1C1A</Color>
+        <Color x:Key="Accent">#2D6A4F</Color>
+        <Color x:Key="BurnOrange">#E76F00</Color>
+        <Color x:Key="Muted">#888880</Color>
+        <Color x:Key="Danger">#C0392B</Color>
+        <Color x:Key="Overlay">#99000000</Color>
+    </ContentPage.Resources>
+
+    <Grid>
+
+        <!--  Main calendar section  -->
+        <ScrollView>
+            <VerticalStackLayout Padding="16,12" Spacing="0">
+
+                <!--  Title  -->
+                <Label
+                    Margin="0,0,0,2"
+                    FontAttributes="Bold"
+                    FontSize="24"
+                    Text="{Binding Burn.Name}"
+                    TextColor="{StaticResource BurnOrange}" />
+                <Label
+                    Margin="0,0,0,16"
+                    FontSize="13"
+                    Text="{Binding Burn.DateRangeDisplay}"
+                    TextColor="{StaticResource Muted}" />
+
+                <!--  Error banner  -->
+                <Border
+                    Margin="0,0,0,12"
+                    Padding="12,8"
+                    BackgroundColor="#FDF0EE"
+                    IsVisible="{Binding HasError}"
+                    Stroke="#E8B4AD"
+                    StrokeShape="RoundRectangle 8">
+                    <Label
+                        FontSize="13"
+                        Text="{Binding ErrorMessage}"
+                        TextColor="{StaticResource Danger}" />
+                </Border>
+
+                <!--  ── Day-of-week headers ──────────────────────────  -->
+                <Grid Margin="0,0,0,4" ColumnDefinitions="*,*,*,*,*,*,*">
+                    <Label
+                        Grid.Column="0"
+                        FontAttributes="Bold"
+                        FontSize="11"
+                        HorizontalTextAlignment="Center"
+                        Text="Sun"
+                        TextColor="{StaticResource Muted}" />
+                    <Label
+                        Grid.Column="1"
+                        FontAttributes="Bold"
+                        FontSize="11"
+                        HorizontalTextAlignment="Center"
+                        Text="Mon"
+                        TextColor="{StaticResource Muted}" />
+                    <Label
+                        Grid.Column="2"
+                        FontAttributes="Bold"
+                        FontSize="11"
+                        HorizontalTextAlignment="Center"
+                        Text="Tue"
+                        TextColor="{StaticResource Muted}" />
+                    <Label
+                        Grid.Column="3"
+                        FontAttributes="Bold"
+                        FontSize="11"
+                        HorizontalTextAlignment="Center"
+                        Text="Wed"
+                        TextColor="{StaticResource Muted}" />
+                    <Label
+                        Grid.Column="4"
+                        FontAttributes="Bold"
+                        FontSize="11"
+                        HorizontalTextAlignment="Center"
+                        Text="Thu"
+                        TextColor="{StaticResource Muted}" />
+                    <Label
+                        Grid.Column="5"
+                        FontAttributes="Bold"
+                        FontSize="11"
+                        HorizontalTextAlignment="Center"
+                        Text="Fri"
+                        TextColor="{StaticResource Muted}" />
+                    <Label
+                        Grid.Column="6"
+                        FontAttributes="Bold"
+                        FontSize="11"
+                        HorizontalTextAlignment="Center"
+                        Text="Sat"
+                        TextColor="{StaticResource Muted}" />
+                </Grid>
+
+                <!--  Calendar grid (CollectionView in 7-col grid)  -->
+                <CollectionView
+                    x:Name="CalendarGrid"
+                    ItemsSource="{Binding Cells}"
+                    SelectionMode="None">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout
+                            HorizontalItemSpacing="4"
+                            Orientation="Vertical"
+                            Span="7"
+                            VerticalItemSpacing="4" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CalendarCell">
+                            <Grid Padding="0">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:BurnCalendarViewModel}}, Path=SelectDayCommand}" CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+
+                                <!--  Empty cell  -->
+                                <Border
+                                    BackgroundColor="Transparent"
+                                    HeightRequest="44"
+                                    IsVisible="{Binding IsEmpty}"
+                                    Stroke="{AppThemeBinding Light=#DDDDDD,
+                                                             Dark=#333330}"
+                                    StrokeShape="RoundRectangle 8"
+                                    StrokeThickness="1" />
+
+                                <!--  Data cell  -->
+                                <VerticalStackLayout
+                                    Padding="2"
+                                    HorizontalOptions="Center"
+                                    IsVisible="{Binding HasData}"
+                                    Spacing="2"
+                                    VerticalOptions="Center">
+
+                                    <!--  Day number  -->
+                                    <Label
+                                        FontSize="11"
+                                        HorizontalTextAlignment="Center"
+                                        Text="{Binding DayNumber}"
+                                        TextColor="{AppThemeBinding Light=#555550,
+                                                                    Dark=#AAAAAA}" />
+
+                                    <!--  Score badge  -->
+                                    <Border
+                                        BackgroundColor="{Binding BadgeColor}"
+                                        HeightRequest="28"
+                                        HorizontalOptions="Center"
+                                        Stroke="Transparent"
+                                        StrokeShape="RoundRectangle 6"
+                                        WidthRequest="28">
+                                        <Label
+                                            FontAttributes="Bold"
+                                            FontSize="13"
+                                            HorizontalTextAlignment="Center"
+                                            Text="{Binding ScoreText}"
+                                            TextColor="White"
+                                            VerticalTextAlignment="Center" />
+                                    </Border>
+
+                                </VerticalStackLayout>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!--  ── Summary row ─────────────────────────────────  -->
+                <Border
+                    Margin="0,20,0,0"
+                    Padding="16,12"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Surface},
+                                                      Dark={StaticResource SurfaceDark}}"
+                    Stroke="Transparent"
+                    StrokeShape="RoundRectangle 12">
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="20"
+                                HorizontalTextAlignment="Center"
+                                Text="{Binding Burn.DaysTracked}"
+                                TextColor="{StaticResource BurnOrange}" />
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="10"
+                                HorizontalTextAlignment="Center"
+                                Text="DAYS"
+                                TextColor="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="20"
+                                HorizontalTextAlignment="Center"
+                                TextColor="{StaticResource Accent}">
+                                <Label.Text>
+                                    <MultiBinding StringFormat="{}{0:0.#}%">
+                                        <Binding Path="Burn.ScorePercent" />
+                                    </MultiBinding>
+                                </Label.Text>
+                            </Label>
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="10"
+                                HorizontalTextAlignment="Center"
+                                Text="SCORE"
+                                TextColor="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" Spacing="2">
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="20"
+                                HorizontalTextAlignment="Center"
+                                Text="{Binding Burn.WeightChangeDisplay}"
+                                TextColor="{StaticResource Accent}" />
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="10"
+                                HorizontalTextAlignment="Center"
+                                Text="WEIGHT"
+                                TextColor="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <!--  ── Save button ──────────────────────────────────  -->
+                <Button
+                    Margin="0,16,0,0"
+                    BackgroundColor="{StaticResource BurnOrange}"
+                    Command="{Binding SaveCommand}"
+                    CornerRadius="10"
+                    IsVisible="{Binding HasUnsavedChanges}"
+                    Text="Save changes"
+                    TextColor="White" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!--  Day detail overlay- sits on top of everything, visible when a day is tapped.  -->
+        <Grid BackgroundColor="#99000000" IsVisible="{Binding IsDaySelected}">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding DismissDayCommand}" />
+            </Grid.GestureRecognizers>
+
+            <!--  Modal card — anchored to the bottom  -->
+            <Border
+                Margin="12,0,12,32"
+                Padding="20,20,20,12"
+                BackgroundColor="{AppThemeBinding Light={StaticResource Surface},
+                                                  Dark={StaticResource SurfaceDark}}"
+                Stroke="Transparent"
+                StrokeShape="RoundRectangle 16"
+                VerticalOptions="End">
+                <Border.Shadow>
+                    <Shadow
+                        Brush="#44000000"
+                        Opacity="1"
+                        Radius="20"
+                        Offset="0,-4" />
+                </Border.Shadow>
+
+                <VerticalStackLayout Spacing="14">
+
+                    <!--  Modal header: date + dismiss  -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label
+                            Grid.Column="0"
+                            FontAttributes="Bold"
+                            FontSize="17"
+                            Text="{Binding SelectedDay.Date, StringFormat='{0:ddd, MMM d}'}"
+                            TextColor="{AppThemeBinding Light=#111110,
+                                                        Dark=#F0EFE9}"
+                            VerticalTextAlignment="Center" />
+                        <Button
+                            Grid.Column="1"
+                            Padding="0"
+                            BackgroundColor="Transparent"
+                            Command="{Binding DismissDayCommand}"
+                            FontSize="20"
+                            HeightRequest="36"
+                            Text="✕"
+                            TextColor="{StaticResource Muted}"
+                            WidthRequest="36" />
+                    </Grid>
+
+                    <!--  Habit checkboxes — 3 col × 2 row grid  -->
+                    <Grid
+                        ColumnDefinitions="*,*,*"
+                        ColumnSpacing="8"
+                        RowDefinitions="Auto,Auto"
+                        RowSpacing="10">
+
+                        <!--  Row 0: Healthy eating  -->
+                        <Grid
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            ColumnDefinitions="Auto,*"
+                            ColumnSpacing="8">
+                            <CheckBox
+                                Grid.Column="0"
+                                IsChecked="{Binding EditNoBreakfast}"
+                                Color="{StaticResource Accent}" />
+                            <Label
+                                Grid.Column="1"
+                                FontSize="14"
+                                Text="No breakfast"
+                                TextColor="{AppThemeBinding Light=#222220,
+                                                            Dark=#DDDDCC}"
+                                VerticalTextAlignment="Center" />
+                        </Grid>
+                        <Grid
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            ColumnDefinitions="Auto,*"
+                            ColumnSpacing="8">
+                            <CheckBox
+                                Grid.Column="0"
+                                IsChecked="{Binding EditPortions}"
+                                Color="{StaticResource Accent}" />
+                            <Label
+                                Grid.Column="1"
+                                FontSize="14"
+                                Text="Portions"
+                                TextColor="{AppThemeBinding Light=#222220,
+                                                            Dark=#DDDDCC}"
+                                VerticalTextAlignment="Center" />
+                        </Grid>
+                        <Grid
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            ColumnDefinitions="Auto,*"
+                            ColumnSpacing="8">
+                            <CheckBox
+                                Grid.Column="0"
+                                IsChecked="{Binding EditNoSnacks}"
+                                Color="{StaticResource Accent}" />
+                            <Label
+                                Grid.Column="1"
+                                FontSize="14"
+                                Text="No snacks"
+                                TextColor="{AppThemeBinding Light=#222220,
+                                                            Dark=#DDDDCC}"
+                                VerticalTextAlignment="Center" />
+                        </Grid>
+                        <!--  Row 1: Exercise | Alcohol | GTBH  -->
+                        <Grid
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            ColumnDefinitions="Auto,*"
+                            ColumnSpacing="8">
+                            <CheckBox
+                                Grid.Column="0"
+                                IsChecked="{Binding EditExercise}"
+                                Color="{StaticResource Accent}" />
+                            <Label
+                                Grid.Column="1"
+                                FontSize="14"
+                                Text="Exercise"
+                                TextColor="{AppThemeBinding Light=#222220,
+                                                            Dark=#DDDDCC}"
+                                VerticalTextAlignment="Center" />
+                        </Grid>
+                        <Grid
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            ColumnDefinitions="Auto,*"
+                            ColumnSpacing="8">
+                            <CheckBox
+                                Grid.Column="0"
+                                IsChecked="{Binding EditNoAlcohol}"
+                                Color="{StaticResource Accent}" />
+                            <Label
+                                Grid.Column="1"
+                                FontSize="14"
+                                Text="No alcohol"
+                                TextColor="{AppThemeBinding Light=#222220,
+                                                            Dark=#DDDDCC}"
+                                VerticalTextAlignment="Center" />
+                        </Grid>
+                        <Grid
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            ColumnDefinitions="Auto,*"
+                            ColumnSpacing="8">
+                            <CheckBox
+                                Grid.Column="0"
+                                IsChecked="{Binding EditGtbh}"
+                                Color="{StaticResource Accent}" />
+                            <Label
+                                Grid.Column="1"
+                                FontSize="14"
+                                Text="Bed hungry"
+                                TextColor="{AppThemeBinding Light=#222220,
+                                                            Dark=#DDDDCC}"
+                                VerticalTextAlignment="Center" />
+                        </Grid>
+
+                    </Grid>
+
+                    <!--  Workout number badge  -->
+                    <Border
+                        Padding="14,10"
+                        BackgroundColor="{AppThemeBinding Light=#F0F7F4,
+                                                          Dark=#1A2E26}"
+                        Stroke="{AppThemeBinding Light=#A8D5A2,
+                                                 Dark=#2D5A40}"
+                        StrokeShape="RoundRectangle 10">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <VerticalStackLayout
+                                Grid.Column="0"
+                                Spacing="2"
+                                VerticalOptions="Center">
+                                <Label
+                                    FontAttributes="Bold"
+                                    FontSize="10"
+                                    Text="TODAY'S WORKOUT"
+                                    TextColor="{StaticResource Muted}" />
+                                <Label
+                                    FontSize="12"
+                                    LineBreakMode="TailTruncation"
+                                    MaxLines="2"
+                                    Text="{Binding SelectedWorkout.Title}"
+                                    TextColor="{AppThemeBinding Light=#222220,
+                                                                Dark=#DDDDCC}" />
+                                <Label
+                                    FontSize="12"
+                                    LineBreakMode="TailTruncation"
+                                    MaxLines="2"
+                                    Text="{Binding SelectedWorkout.Url}"
+                                    TextColor="{AppThemeBinding Light=#222220,
+                                                                Dark=#DDDDCC}" />
+                            </VerticalStackLayout>
+                            <Button
+                                Grid.Column="1"
+                                BackgroundColor="{StaticResource Accent}"
+                                Command="{Binding OpenWorkoutCommand}"
+                                CornerRadius="8"
+                                FontAttributes="Bold"
+                                FontSize="20"
+                                HeightRequest="48"
+                                Text="{Binding SelectedDay.WorkoutNum}"
+                                TextColor="White"
+                                WidthRequest="48" />
+                        </Grid>
+                    </Border>
+
+                    <!--  Weight input  -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Border
+                            Grid.Column="0"
+                            Padding="12,0"
+                            BackgroundColor="{AppThemeBinding Light=#F5F5F0,
+                                                              Dark=#2A2A28}"
+                            Stroke="{AppThemeBinding Light=#E0E0D8,
+                                                     Dark=#3A3A38}"
+                            StrokeShape="RoundRectangle 8">
+                            <Entry
+                                FontSize="15"
+                                Keyboard="Numeric"
+                                Placeholder="Weight"
+                                PlaceholderColor="{StaticResource Muted}"
+                                Text="{Binding EditWeightText}"
+                                VerticalOptions="Center" />
+                        </Border>
+                        <Label
+                            Grid.Column="1"
+                            FontSize="15"
+                            Text="lbs"
+                            TextColor="{StaticResource Muted}"
+                            VerticalTextAlignment="Center" />
+                    </Grid>
+
+                    <!--  Confirm button  -->
+                    <Button
+                        BackgroundColor="{StaticResource Accent}"
+                        Command="{Binding CommitDayCommand}"
+                        CornerRadius="10"
+                        Text="Done"
+                        TextColor="White" />
+
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+    </Grid>
+</ContentPage>

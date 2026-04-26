@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell
+    x:Class="SkinnyB.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:SkinnyB.Pages"
+    Shell.NavBarIsVisible="False">
+
+    <Shell.Resources>
+        <Style TargetType="TabBar">
+            <Setter Property="Shell.TabBarBackgroundColor" Value="{AppThemeBinding Light=#FFFFFF, Dark=#1C1C1A}" />
+            <Setter Property="Shell.TabBarForegroundColor" Value="{AppThemeBinding Light=#888880, Dark=#888880}" />
+            <Setter Property="Shell.TabBarTitleColor" Value="{AppThemeBinding Light=#2D6A4F, Dark=#52B788}" />
+            <Setter Property="Shell.TabBarUnselectedColor" Value="{AppThemeBinding Light=#AAAAAA, Dark=#555550}" />
+        </Style>
+    </Shell.Resources>
+
+    <TabBar>
+
+        <!--  Weekly tab  -->
+        <ShellContent
+            Title="Weekly"
+            ContentTemplate="{DataTemplate pages:WeeklyPage}"
+            Icon="tab_weekly.png"
+            Route="weekly" />
+
+        <!--  Burn tab  -->
+        <ShellContent
+            Title="Burn"
+            ContentTemplate="{DataTemplate pages:BurnPage}"
+            Icon="tab_burn.png"
+            Route="burn" />
+
+        <!--  Data tab  -->
+        <ShellContent
+            Title="Stats"
+            ContentTemplate="{DataTemplate pages:StatsPage}"
+            Icon="tab_stats.png"
+            Route="stats" />
+
+    </TabBar>
+</Shell>

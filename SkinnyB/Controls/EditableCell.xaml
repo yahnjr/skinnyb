@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="SkinnyB.Controls.EditableCell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    <Grid
+        x:Name="RootGrid"
+        HeightRequest="40"
+        HorizontalOptions="Center"
+        WidthRequest="52">
+
+        <!--  Normal state: just the number  -->
+        <Border
+            x:Name="NormalView"
+            BackgroundColor="Transparent"
+            Stroke="{AppThemeBinding Light=#E0E0D8,
+                                     Dark=#333330}"
+            StrokeShape="RoundRectangle 8">
+            <Label
+                x:Name="ValueLabel"
+                FontAttributes="Bold"
+                FontSize="17"
+                HorizontalTextAlignment="Center"
+                VerticalTextAlignment="Center" />
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnTapped" />
+            </Border.GestureRecognizers>
+        </Border>
+
+        <!--  Selected state: − value +  -->
+        <Border
+            x:Name="EditView"
+            BackgroundColor="#E6F1FB"
+            IsVisible="False"
+            Stroke="#378ADD"
+            StrokeShape="RoundRectangle 8"
+            WidthRequest="84">
+            <HorizontalStackLayout
+                HorizontalOptions="Center"
+                Spacing="4"
+                VerticalOptions="Center">
+                <Button
+                    Padding="0"
+                    BackgroundColor="White"
+                    Clicked="OnDecrement"
+                    CornerRadius="4"
+                    FontSize="16"
+                    HeightRequest="24"
+                    Text="−"
+                    TextColor="#333330"
+                    WidthRequest="24" />
+                <Label
+                    x:Name="EditLabel"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    HorizontalTextAlignment="Center"
+                    VerticalTextAlignment="Center"
+                    WidthRequest="20" />
+                <Button
+                    Padding="0"
+                    BackgroundColor="White"
+                    Clicked="OnIncrement"
+                    CornerRadius="4"
+                    FontSize="16"
+                    HeightRequest="24"
+                    Text="+"
+                    TextColor="#333330"
+                    WidthRequest="24" />
+            </HorizontalStackLayout>
+        </Border>
+    </Grid>
+</ContentView>

@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Application
+    x:Class="SkinnyB.App"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:SkinnyB.Converters"
+    xmlns:local="clr-namespace:SkinnyB">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <converters:DivideBy100Converter x:Key="DivideBy100" />
+            <converters:BoolToOverGoalColorConverter x:Key="BoolToOverGoalColor" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

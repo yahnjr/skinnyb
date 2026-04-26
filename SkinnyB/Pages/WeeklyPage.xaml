@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="SkinnyB.Pages.WeeklyPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:SkinnyB.Converters"
+    xmlns:models="clr-namespace:SkinnyB.Models"
+    xmlns:vm="clr-namespace:SkinnyB.ViewModels"
+    Title="Weekly Overview"
+    BackgroundColor="{AppThemeBinding Light=#F5F5F0,
+                                      Dark=#111110}">
+
+    <ContentPage.Resources>
+
+        <!--  ── Colours ───────────────────────────────────────────────  -->
+        <Color x:Key="Surface">#FFFFFF</Color>
+        <Color x:Key="SurfaceDark">#1C1C1A</Color>
+        <Color x:Key="Accent">#2D6A4F</Color>
+        <Color x:Key="AccentLight">#52B788</Color>
+        <Color x:Key="OverGoal">#FFBA08</Color>
+        <Color x:Key="Danger">#C0392B</Color>
+        <Color x:Key="Muted">#888880</Color>
+        <Color x:Key="BurnOrange">#E76F00</Color>
+
+        <!--  ── Card surface ─────────────────────────────────────────  -->
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+            <Setter Property="Stroke" Value="Transparent" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow
+                        Brush="#22000000"
+                        Opacity="1"
+                        Radius="8"
+                        Offset="0,2" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  ── Row card ──────────────────────────────────────────────  -->
+        <Style x:Key="RowCard" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+            <Setter Property="Stroke" Value="Transparent" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow
+                        Brush="#14000000"
+                        Opacity="1"
+                        Radius="4"
+                        Offset="0,1" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  ── Column header ─────────────────────────────────────────  -->
+        <Style x:Key="ColHeader" TargetType="Label">
+            <Setter Property="TextColor" Value="{StaticResource Muted}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="HorizontalTextAlignment" Value="Center" />
+        </Style>
+
+        <!--  ── Habit entry cell ───────────────────────────────────────  -->
+        <Style x:Key="HabitEntry" TargetType="Entry">
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="HorizontalTextAlignment" Value="Center" />
+            <Setter Property="Keyboard" Value="Numeric" />
+            <Setter Property="WidthRequest" Value="48" />
+        </Style>
+
+        <!--  ── Score bar row label ────────────────────────────────────  -->
+        <Style x:Key="BarLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource Muted}" />
+            <Setter Property="VerticalTextAlignment" Value="Center" />
+            <Setter Property="WidthRequest" Value="38" />
+        </Style>
+
+        <!--  ── Score % label beside bar ──────────────────────────────  -->
+        <Style x:Key="BarPct" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="VerticalTextAlignment" Value="Center" />
+            <Setter Property="HorizontalTextAlignment" Value="End" />
+            <Setter Property="WidthRequest" Value="36" />
+        </Style>
+
+        <Color x:Key="GoalGreen">#A8D5A2</Color>
+        <local:BoolToColorConverter
+            x:Key="BoolToGreenConverter"
+            FalseColor="Transparent"
+            TrueColor="#A8D5A2" />
+        <!--  BoolToGreenConverter: true → GoalGreen, false → Transparent  -->
+
+        <local:BoolToStringConverter
+            x:Key="BoolToChevronConverter"
+            FalseValue="▼"
+            TrueValue="▲" />
+
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="0">
+
+        <!--  Fixed Header Content (Title, Scoreboard, Headers)  -->
+        <VerticalStackLayout
+            Grid.Row="0"
+            Padding="20,16,20,0"
+            Spacing="0">
+
+            <!--  ── Page Title  -->
+            <Label
+                Margin="0,0,0,4"
+                FontAttributes="Bold"
+                FontSize="28"
+                Text="Weight Tracker"
+                TextColor="{AppThemeBinding Light=#111110,
+                                            Dark=#F0EFE9}" />
+            <Label
+                Margin="0,0,0,16"
+                FontSize="14"
+                Text="Weekly habit log"
+                TextColor="{StaticResource Muted}" />
+
+            <!--  ── Scoreboard  -->
+            <Border Margin="0,0,0,24" Style="{StaticResource Card}">
+                <Grid ColumnDefinitions="3*,1,2*" ColumnSpacing="0">
+
+                    <!--  ── LEFT: progress bars ──────────────────  -->
+                    <VerticalStackLayout
+                        Grid.Column="0"
+                        Padding="0,0,16,0"
+                        Spacing="12">
+
+                        <!--  Week bar  -->
+                        <Grid ColumnDefinitions="38,*,36" ColumnSpacing="6">
+                            <Label
+                                Grid.Column="0"
+                                Style="{StaticResource BarLabel}"
+                                Text="Week" />
+                            <ProgressBar
+                                Grid.Column="1"
+                                HeightRequest="8"
+                                Progress="{Binding ThisWeekProgressValue}"
+                                ProgressColor="{Binding ThisWeekOverGoal, Converter={x:StaticResource BoolToOverGoalColor}}"
+                                VerticalOptions="Center" />
+                            <Label
+                                Grid.Column="2"
+                                Style="{StaticResource BarPct}"
+                                Text="{Binding ThisWeekLabel}"
+                                TextColor="{Binding ThisWeekOverGoal, Converter={x:StaticResource BoolToOverGoalColor}}" />
+                        </Grid>
+
+                        <!--  Month bar  -->
+                        <Grid ColumnDefinitions="38,*,36" ColumnSpacing="6">
+                            <Label
+                                Grid.Column="0"
+                                Style="{StaticResource BarLabel}"
+                                Text="Month" />
+                            <ProgressBar
+                                Grid.Column="1"
+                                HeightRequest="8"
+                                Progress="{Binding MonthProgressValue}"
+                                ProgressColor="{Binding MonthOverGoal, Converter={x:StaticResource BoolToOverGoalColor}}"
+                                VerticalOptions="Center" />
+                            <Label
+                                Grid.Column="2"
+                                Style="{StaticResource BarPct}"
+                                Text="{Binding MonthLabel}"
+                                TextColor="{Binding MonthOverGoal, Converter={x:StaticResource BoolToOverGoalColor}}" />
+                        </Grid>
+
+                        <!--  Total bar  -->
+                        <Grid ColumnDefinitions="38,*,36" ColumnSpacing="6">
+                            <Label
+                                Grid.Column="0"
+                                Style="{StaticResource BarLabel}"
+                                Text="Total" />
+                            <ProgressBar
+                                Grid.Column="1"
+                                HeightRequest="8"
+                                Progress="{Binding TotalProgressValue}"
+                                ProgressColor="{Binding TotalOverGoal, Converter={x:StaticResource BoolToOverGoalColor}}"
+                                VerticalOptions="Center" />
+                            <Label
+                                Grid.Column="2"
+                                Style="{StaticResource BarPct}"
+                                Text="{Binding TotalLabel}"
+                                TextColor="{Binding TotalOverGoal, Converter={x:StaticResource BoolToOverGoalColor}}" />
+                        </Grid>
+
+                    </VerticalStackLayout>
+
+                    <!--  ── Divider ────────────────────────────────  -->
+                    <BoxView
+                        Grid.Column="1"
+                        BackgroundColor="#E0E0D8"
+                        VerticalOptions="Fill"
+                        WidthRequest="1" />
+
+                    <!--  ── RIGHT: weight + arrow ─────────────────  -->
+                    <VerticalStackLayout
+                        Grid.Column="2"
+                        Padding="16,0,0,0"
+                        HorizontalOptions="Center"
+                        MinimumWidthRequest="100"
+                        Spacing="2"
+                        VerticalOptions="Center">
+
+                        <!--  Current weight  -->
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="22"
+                            HorizontalTextAlignment="Center"
+                            Text="{Binding CurrentWeightDisplay}"
+                            TextColor="{AppThemeBinding Light=#111110,
+                                                        Dark=#F0EFE9}" />
+
+                        <!--  Arrow (visible when delta data exists)  -->
+                        <Label
+                            FontSize="28"
+                            HorizontalTextAlignment="Center"
+                            IsVisible="{Binding WeightArrowVisible}"
+                            Text="➜"
+                            TextColor="{Binding WeightArrowColor}">
+                            <Label.Rotation>
+                                <Binding Path="WeightArrowRotation" />
+                            </Label.Rotation>
+                        </Label>
+
+                        <!--  Dash when not enough data  -->
+                        <Label
+                            FontSize="22"
+                            HorizontalTextAlignment="Center"
+                            IsVisible="{Binding WeightDashVisible}"
+                            Text="—"
+                            TextColor="{StaticResource Muted}" />
+
+                        <!--  Delta value  -->
+                        <Label
+                            FontSize="12"
+                            HorizontalTextAlignment="Center"
+                            Text="{Binding WeightDeltaDisplay}"
+                            TextColor="{Binding WeightDeltaTextColor}" />
+
+                    </VerticalStackLayout>
+
+                </Grid>
+            </Border>
+
+            <!--  ── Weekly workouts  -->
+            <Border Margin="0,0,0,16" Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <Label
+                            Grid.Column="0"
+                            FontAttributes="Bold"
+                            FontSize="15"
+                            Text="This week's workouts"
+                            TextColor="{AppThemeBinding Light=#111110,
+                                                        Dark=#F0EFE9}"
+                            VerticalTextAlignment="Center" />
+                        <Button
+                            Grid.Column="1"
+                            Padding="10,4"
+                            BackgroundColor="Transparent"
+                            Command="{Binding RefreshWorkoutsCommand}"
+                            FontSize="18"
+                            Text="↻"
+                            TextColor="{StaticResource Muted}" />
+                        <Button
+                            Grid.Column="2"
+                            Padding="10,4"
+                            BackgroundColor="Transparent"
+                            Command="{Binding ToggleWorkoutsCommand}"
+                            FontSize="18"
+                            Text="{Binding WorkoutsExpanded, Converter={x:StaticResource BoolToChevronConverter}}"
+                            TextColor="{StaticResource Muted}" />
+                    </Grid>
+
+                    <CollectionView
+                        IsVisible="{Binding WorkoutsExpanded}"
+                        ItemsSource="{Binding SuggestedWorkouts}"
+                        SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:WorkoutEntry">
+                                <Grid
+                                    Padding="0,4"
+                                    ColumnDefinitions="Auto,*,Auto"
+                                    ColumnSpacing="10">
+
+                                    <!--  Number badge  -->
+                                    <Border
+                                        Grid.Column="0"
+                                        Padding="0"
+                                        BackgroundColor="{StaticResource Accent}"
+                                        HeightRequest="32"
+                                        HorizontalOptions="Center"
+                                        Stroke="Transparent"
+                                        StrokeShape="RoundRectangle 6"
+                                        VerticalOptions="Center"
+                                        WidthRequest="32">
+                                        <Label
+                                            FontAttributes="Bold"
+                                            FontSize="13"
+                                            HorizontalTextAlignment="Center"
+                                            Text="{Binding Number}"
+                                            TextColor="White"
+                                            VerticalTextAlignment="Center" />
+                                    </Border>
+
+                                    <!--  Title  -->
+                                    <Label
+                                        Grid.Column="1"
+                                        FontSize="13"
+                                        LineBreakMode="TailTruncation"
+                                        MaxLines="2"
+                                        Text="{Binding Title}"
+                                        TextColor="{AppThemeBinding Light=#333330,
+                                                                    Dark=#DDDDD0}"
+                                        VerticalTextAlignment="Center" />
+
+                                    <!--  Open button  -->
+                                    <Button
+                                        Grid.Column="2"
+                                        Padding="10,6"
+                                        BackgroundColor="{StaticResource BurnOrange}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenWorkoutCommand}"
+                                        CommandParameter="{Binding .}"
+                                        CornerRadius="6"
+                                        FontSize="12"
+                                        Text="▶ Go"
+                                        TextColor="White" />
+
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <!--  ── Error banner ──────────────────────────────────────  -->
+            <Border
+                Margin="0,0,0,16"
+                Padding="14,10"
+                BackgroundColor="#FDF0EE"
+                IsVisible="{Binding HasError}"
+                Stroke="#E8B4AD"
+                StrokeShape="RoundRectangle 8">
+                <Label
+                    FontSize="13"
+                    Text="{Binding ErrorMessage}"
+                    TextColor="{StaticResource Danger}" />
+            </Border>
+
+            <!--  Table header- visible when scrolling  -->
+            <Grid
+                Margin="0,0,0,6"
+                Padding="16,0"
+                ColumnDefinitions="110,*,*,*,56,52">
+                <Label
+                    Grid.Column="0"
+                    HorizontalTextAlignment="Start"
+                    Style="{StaticResource ColHeader}"
+                    Text="WEEK" />
+                <Label
+                    Grid.Column="1"
+                    Style="{StaticResource ColHeader}"
+                    Text="EAT" />
+                <Label
+                    Grid.Column="2"
+                    Style="{StaticResource ColHeader}"
+                    Text="EXER" />
+                <Label
+                    Grid.Column="3"
+                    Style="{StaticResource ColHeader}"
+                    Text="ALCO" />
+                <Label
+                    Grid.Column="4"
+                    Style="{StaticResource ColHeader}"
+                    Text="WEIGHT" />
+                <Label
+                    Grid.Column="5"
+                    Style="{StaticResource ColHeader}"
+                    Text="TOTAL" />
+            </Grid>
+
+        </VerticalStackLayout>
+
+        <!--  Scrollable Data Rows  -->
+        <ScrollView x:Name="WeeksScrollView" Grid.Row="1">
+            <VerticalStackLayout Padding="20,0,20,16">
+                <CollectionView ItemsSource="{Binding Weeks}" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:WeekEntry">
+                            <Border Style="{StaticResource RowCard}">
+                                <Grid ColumnDefinitions="110,*,*,*,56,52" RowDefinitions="Auto">
+
+                                    <!--  Week range  -->
+                                    <Label
+                                        Grid.Column="0"
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        Text="{Binding WeekRangeLabel}"
+                                        TextColor="{AppThemeBinding Light=#333330,
+                                                                    Dark=#DDDDD0}"
+                                        VerticalTextAlignment="Center" />
+
+                                    <!--  Eat Healthy  -->
+                                    <Border
+                                        Grid.Column="1"
+                                        Padding="2"
+                                        BackgroundColor="{Binding EatHealthyMet, Converter={x:StaticResource BoolToGreenConverter}}"
+                                        HorizontalOptions="Center"
+                                        Stroke="Transparent"
+                                        StrokeShape="RoundRectangle 6"
+                                        VerticalOptions="Center">
+                                        <Entry Style="{StaticResource HabitEntry}" Text="{Binding EatHealthy}" />
+                                    </Border>
+
+                                    <!--  Exercise  -->
+                                    <Border
+                                        Grid.Column="2"
+                                        Padding="2"
+                                        BackgroundColor="{Binding ExerciseMet, Converter={x:StaticResource BoolToGreenConverter}}"
+                                        HorizontalOptions="Center"
+                                        Stroke="Transparent"
+                                        StrokeShape="RoundRectangle 6"
+                                        VerticalOptions="Center">
+                                        <Entry Style="{StaticResource HabitEntry}" Text="{Binding Exercise}" />
+                                    </Border>
+
+                                    <!--  Avoid Alcohol  -->
+                                    <Border
+                                        Grid.Column="3"
+                                        Padding="2"
+                                        BackgroundColor="{Binding AlcoholMet, Converter={x:StaticResource BoolToGreenConverter}}"
+                                        HorizontalOptions="Center"
+                                        Stroke="Transparent"
+                                        StrokeShape="RoundRectangle 6"
+                                        VerticalOptions="Center">
+                                        <Entry Style="{StaticResource HabitEntry}" Text="{Binding AvoidAlcohol}" />
+                                    </Border>
+
+                                    <!--  Weight  -->
+                                    <Entry
+                                        Grid.Column="4"
+                                        FontAttributes="Bold"
+                                        FontSize="14"
+                                        HorizontalTextAlignment="Center"
+                                        Placeholder="—"
+                                        PlaceholderColor="{StaticResource Muted}"
+                                        Text="{Binding WeightDisplay}"
+                                        WidthRequest="52" />
+
+                                    <!--  Total badge  -->
+                                    <Border
+                                        Grid.Column="5"
+                                        Padding="0"
+                                        BackgroundColor="{StaticResource Accent}"
+                                        HeightRequest="28"
+                                        HorizontalOptions="Center"
+                                        Stroke="Transparent"
+                                        StrokeShape="RoundRectangle 6"
+                                        VerticalOptions="Center"
+                                        WidthRequest="40">
+                                        <Label
+                                            FontAttributes="Bold"
+                                            FontSize="14"
+                                            HorizontalTextAlignment="Center"
+                                            Text="{Binding Total}"
+                                            TextColor="White"
+                                            VerticalTextAlignment="Center" />
+                                    </Border>
+
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout
+                            Margin="0,40"
+                            HorizontalOptions="Center"
+                            Spacing="8">
+                            <Label
+                                FontSize="16"
+                                HorizontalTextAlignment="Center"
+                                Text="No data yet"
+                                TextColor="{StaticResource Muted}" />
+                            <Label
+                                FontSize="13"
+                                HorizontalTextAlignment="Center"
+                                Text="Pull down to refresh"
+                                TextColor="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                </CollectionView>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!--  Save & Refresh buttons  -->
+        <VerticalStackLayout
+            Grid.Row="2"
+            Padding="20,8,20,16"
+            Spacing="8">
+            <Button
+                BackgroundColor="{StaticResource Accent}"
+                Clicked="OnSaveClicked"
+                CornerRadius="10"
+                Text="Save changes"
+                TextColor="White" />
+            <Button
+                Margin="0,8,0,0"
+                BackgroundColor="{AppThemeBinding Light=#F5F5F0,
+                                                  Dark=#2A2A28}"
+                BorderColor="{StaticResource Accent}"
+                BorderWidth="1"
+                Command="{Binding RefreshCommand}"
+                CornerRadius="10"
+                Text="Refresh"
+                TextColor="{StaticResource Accent}" />
+        </VerticalStackLayout>
+
+    </Grid>
+</ContentPage>

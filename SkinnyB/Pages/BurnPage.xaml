@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="SkinnyB.Pages.BurnPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:SkinnyB.Models"
+    xmlns:vm="clr-namespace:SkinnyB.ViewModels"
+    Title="Burn Sessions"
+    BackgroundColor="{AppThemeBinding Light=#F5F5F0,
+                                      Dark=#111110}">
+
+    <ContentPage.Resources>
+        <Color x:Key="Surface">#FFFFFF</Color>
+        <Color x:Key="SurfaceDark">#1C1C1A</Color>
+        <Color x:Key="Accent">#2D6A4F</Color>
+        <Color x:Key="AccentLight">#52B788</Color>
+        <Color x:Key="Danger">#C0392B</Color>
+        <Color x:Key="Muted">#888880</Color>
+        <Color x:Key="BurnOrange">#E76F00</Color>
+
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+            <Setter Property="Stroke" Value="Transparent" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow
+                        Brush="#22000000"
+                        Opacity="1"
+                        Radius="8"
+                        Offset="0,2" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="StatValue" TargetType="Label">
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="HorizontalTextAlignment" Value="Center" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#111110, Dark=#F0EFE9}" />
+        </Style>
+        <Style x:Key="StatLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource Muted}" />
+            <Setter Property="HorizontalTextAlignment" Value="Center" />
+        </Style>
+    </ContentPage.Resources>
+
+    <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsLoading}">
+        <ScrollView>
+            <VerticalStackLayout Padding="20,16" Spacing="0">
+
+                <Label
+                    Margin="0,0,0,4"
+                    FontAttributes="Bold"
+                    FontSize="28"
+                    Text="Burn Sessions"
+                    TextColor="{AppThemeBinding Light=#111110,
+                                                Dark=#F0EFE9}" />
+                <Label
+                    Margin="0,0,0,20"
+                    FontSize="14"
+                    Text="30-day intensive tracking"
+                    TextColor="{StaticResource Muted}" />
+
+                <Border
+                    Margin="0,0,0,16"
+                    Padding="14,10"
+                    BackgroundColor="#FDF0EE"
+                    IsVisible="{Binding HasError}"
+                    Stroke="#E8B4AD"
+                    StrokeShape="RoundRectangle 8">
+                    <Label
+                        FontSize="13"
+                        Text="{Binding ErrorMessage}"
+                        TextColor="{StaticResource Danger}" />
+                </Border>
+
+                <CollectionView ItemsSource="{Binding Burns}" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:BurnEntry">
+                            <Border Style="{StaticResource Card}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenBurnCommand}" CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+
+                                <VerticalStackLayout Spacing="12">
+
+                                    <!--  Header: name + active badge  -->
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="18"
+                                                Text="{Binding Name}"
+                                                TextColor="{StaticResource BurnOrange}" />
+                                            <Label
+                                                FontSize="12"
+                                                Text="{Binding DateRangeDisplay}"
+                                                TextColor="{StaticResource Muted}" />
+                                        </VerticalStackLayout>
+                                        <Border
+                                            Grid.Column="1"
+                                            Padding="10,4"
+                                            BackgroundColor="{StaticResource BurnOrange}"
+                                            IsVisible="{Binding IsActive}"
+                                            Stroke="Transparent"
+                                            StrokeShape="RoundRectangle 8"
+                                            VerticalOptions="Center">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="11"
+                                                Text="ACTIVE"
+                                                TextColor="White" />
+                                        </Border>
+                                    </Grid>
+
+                                    <!--  Stats  -->
+                                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Style="{StaticResource StatValue}" Text="{Binding DaysTracked}" />
+                                            <Label Style="{StaticResource StatLabel}" Text="DAYS" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Style="{StaticResource StatValue}" TextColor="{StaticResource AccentLight}">
+                                                <Label.Text>
+                                                    <MultiBinding StringFormat="{}{0:0.#}%">
+                                                        <Binding Path="ScorePercent" />
+                                                    </MultiBinding>
+                                                </Label.Text>
+                                            </Label>
+                                            <Label Style="{StaticResource StatLabel}" Text="SCORE" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                            <Label Style="{StaticResource StatValue}">
+                                                <Label.Text>
+                                                    <MultiBinding StringFormat="{}{0}/{1}">
+                                                        <Binding Path="TotalScore" />
+                                                        <Binding Path="MaxScore" />
+                                                    </MultiBinding>
+                                                </Label.Text>
+                                            </Label>
+                                            <Label Style="{StaticResource StatLabel}" Text="PTS" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="3" Spacing="2">
+                                            <Label
+                                                Style="{StaticResource StatValue}"
+                                                Text="{Binding WeightChangeDisplay}"
+                                                TextColor="{StaticResource Accent}" />
+                                            <Label Style="{StaticResource StatLabel}" Text="WEIGHT" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+
+                                    <ProgressBar
+                                        BackgroundColor="#E8E8E0"
+                                        HeightRequest="6"
+                                        Progress="{Binding ScorePercent, Converter={x:StaticResource DivideBy100}}"
+                                        ProgressColor="{StaticResource BurnOrange}" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout
+                            Margin="0,40"
+                            HorizontalOptions="Center"
+                            Spacing="8">
+                            <Label
+                                FontSize="16"
+                                HorizontalTextAlignment="Center"
+                                Text="No burn sessions yet"
+                                TextColor="{StaticResource Muted}" />
+                            <Label
+                                FontSize="13"
+                                HorizontalTextAlignment="Center"
+                                Text="Pull down to refresh"
+                                TextColor="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                </CollectionView>
+
+                <Button
+                    Margin="0,16,0,0"
+                    BackgroundColor="{StaticResource BurnOrange}"
+                    Command="{Binding LaunchBurnCommand}"
+                    CornerRadius="10"
+                    IsVisible="{Binding CanStartBurn}"
+                    Text="Start new burn"
+                    TextColor="White" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</ContentPage>
