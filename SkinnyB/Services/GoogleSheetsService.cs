@@ -172,7 +172,7 @@ public class GoogleSheetsService
         var burns = new List<BurnEntry>();
         BurnEntry? current = null;
         bool skipNext = false;
-        int sheetRow = 1;
+        int sheetRow = 0;
 
         foreach (var row in rows)
         {
