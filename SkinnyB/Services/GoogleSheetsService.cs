@@ -745,7 +745,7 @@ public class GoogleSheetsService
 #if ANDROID
         await InitialiseWithRefreshTokenAsync();
 #else
-        using var stream = await FileSystem.OpenAppPackageFileAsync("credentials.json");
+        using var stream = await FileSystem.OpenAppPackageFileAsync("credentials_windows.json");
         using var reader = new StreamReader(stream);
         string credentialsJson = await reader.ReadToEndAsync();
 
@@ -770,7 +770,7 @@ public class GoogleSheetsService
 #if ANDROID
     private async Task InitialiseWithRefreshTokenAsync()
     {
-        using var stream = await FileSystem.OpenAppPackageFileAsync("credentials.json");
+        using var stream = await FileSystem.OpenAppPackageFileAsync("credentials_windows.json");
         using var jsonStream = new MemoryStream();
         await stream.CopyToAsync(jsonStream);
         jsonStream.Position = 0;

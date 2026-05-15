@@ -70,6 +70,7 @@ Thumbs.db
 
 # Secrets and credentials
 credentials.json
+credentials_windows.json
 appsettings.json
 appsettings.Development.json
 appsettings.*.json
