@@ -71,6 +71,7 @@ Thumbs.db
 # Secrets and credentials
 credentials.json
 credentials_windows.json
+credentials_android.json
 appsettings.json
 appsettings.Development.json
 appsettings.*.json
@@ -83,7 +84,8 @@ token_cache/
 .token_cache/
 
 # Environment variables
-.env
+SkinnyB/Resources/Raw/.env
+SkinnyB/.env
 .env.local
 .env.*.local
 

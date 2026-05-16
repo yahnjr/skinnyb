@@ -101,6 +101,37 @@ public class StatsViewModel : INotifyPropertyChanged
     public bool HasWeightData => WeightHistory.Count >= 2;
     public bool HasNoWeightData => !HasWeightData;
 
+    private async Task LoginWithGoogleAsync()
+    {
+        System.Diagnostics.Debug.WriteLine("[Auth] LoginWithGoogleAsync called");
+        try
+        {
+            IsLoading = true;
+            bool success = await GoogleAuthService.LoginAsync();
+            if (success)
+            {
+                await Task.Delay(500);
+                _sheetsService.ResetService();
+                SuccessMessage = "Signed in successfully.";
+                await Task.Delay(2000);
+                SuccessMessage = null;
+                await LoadDataAsync();
+            }
+            else
+            {
+                ErrorMessage = "Sign-in failed or was cancelled.";
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Auth] EXCEPTION: {ex}");
+            ErrorMessage = $"Login error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
     // ── Commands ──────────────────────────────────────────────────────────
 
     public ICommand RefreshCommand { get; }
@@ -111,6 +142,8 @@ public class StatsViewModel : INotifyPropertyChanged
     public ICommand DecrementExerciseCommand { get; }
     public ICommand IncrementAlcoholCommand { get; }
     public ICommand DecrementAlcoholCommand { get; }
+    
+    public ICommand LoginWithGoogleCommand { get; }
 
     public StatsViewModel(GoogleSheetsService sheetsService)
     {
@@ -126,6 +159,7 @@ public class StatsViewModel : INotifyPropertyChanged
         DecrementExerciseCommand = new Command(() => ExerciseGoal--);
         IncrementAlcoholCommand = new Command(() => AlcoholGoal++);
         DecrementAlcoholCommand = new Command(() => AlcoholGoal--);
+        LoginWithGoogleCommand = new Command(async () => await LoginWithGoogleAsync());
 
         LoadSavedRefreshToken();
     }

@@ -9,8 +9,9 @@ namespace SkinnyB.Services;
 
 public class GoogleSheetsService
 {
-    private const string SpreadsheetId = "1Q8l64kCdxKRciHk5669kNKs3s6UJl7ctChmh-iO-_dw";
-    private const string DataRange = "Sheet1!A2:F";
+    private static string SpreadsheetId => 
+        Environment.GetEnvironmentVariable("SPREADSHEET_ID") ?? "";
+    // private const string DataRange = "Sheet1!A2:F";
     private const string AppName = "SkinnyB";
     private int workoutVideoCount = 41;
 
@@ -528,7 +529,12 @@ public class GoogleSheetsService
         return result;
     }
 
-    // Existing helpers (unchanged)
+    public void ResetService()
+    {
+        _service = null;
+    }
+
+    // Helpers
 
     private async Task<int> FindSheetRowAsync(DateTime weekStart)
     {
@@ -782,10 +788,11 @@ public class GoogleSheetsService
         try
         {
             refreshToken = await SecureStorage.Default.GetAsync("google_refresh_token");
+            System.Diagnostics.Debug.WriteLine($"[Sheets] Token from SecureStorage: '{refreshToken?.Substring(0, Math.Min(10, refreshToken?.Length ?? 0))}...'");
         }
-        catch
+        catch (Exception ex)
         {
-            // Silently ignore secure storage errors
+            System.Diagnostics.Debug.WriteLine($"[Sheets] SecureStorage read failed: {ex.Message}");
         }
 
         refreshToken ??= Environment.GetEnvironmentVariable("GOOGLE_REFRESH_TOKEN");

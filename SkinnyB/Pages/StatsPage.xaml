@@ -235,14 +235,26 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- ── Refresh Token card ──────────────────────────────── -->
+            <!-- ── Google Auth card ──────────────────────────────── -->
             <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="0">
-                    <Label Style="{StaticResource SectionTitle}" Text="Google Auth Token" />
+                    <Label Style="{StaticResource SectionTitle}" Text="Google Auth" />
+
+                    <!-- Android: login button -->
+                    <Button
+                        Margin="0,0,0,12"
+                        BackgroundColor="{StaticResource Accent}"
+                        Command="{Binding LoginWithGoogleCommand}"
+                        CornerRadius="10"
+                        IsVisible="{OnPlatform Android=True, Default=False}"
+                        Text="Sign in with Google"
+                        TextColor="White" />
+
+                    <!-- Manual fallback (keep for emergencies) -->
                     <Label
                         FontSize="12"
-                        Margin="0,0,0,12"
-                        Text="Paste your refresh token here if the app loses Google Sheets access."
+                        Margin="0,0,0,8"
+                        Text="Or paste a refresh token manually:"
                         TextColor="{StaticResource Muted}" />
                     <Border
                         Padding="12,10"
@@ -251,7 +263,6 @@
                         StrokeShape="RoundRectangle 8"
                         Margin="0,0,0,12">
                         <Editor
-                            x:Name="RefreshTokenEditor"
                             AutoSize="TextChanges"
                             FontFamily="Courier New"
                             FontSize="12"
@@ -262,14 +273,15 @@
                             TextColor="{AppThemeBinding Light=#111110, Dark=#F0EFE9}" />
                     </Border>
                     <Button
-                        BackgroundColor="{StaticResource Accent}"
+                        BackgroundColor="{AppThemeBinding Light=#EBEBEB, Dark=#2A2A28}"
+                        BorderColor="{StaticResource Accent}"
+                        BorderWidth="1"
                         Command="{Binding SaveRefreshTokenCommand}"
                         CornerRadius="10"
                         Text="Save token"
-                        TextColor="White" />
+                        TextColor="{StaticResource Accent}" />
                 </VerticalStackLayout>
             </Border>
-
             <!-- Refresh -->
             <Button
                 BackgroundColor="{AppThemeBinding Light=#F5F5F0, Dark=#2A2A28}"
