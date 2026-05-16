@@ -237,6 +237,7 @@ public class BurnCalendarViewModel : INotifyPropertyChanged
         try
         {
             DateTime weekStart = GoogleSheetsService.GetWeekStartOf(committedDay.Date);
+            DateTime weekEnd = weekStart.AddDays(6);
 
             int rowIndex = await _sheetsService.FindWeeklyRowAsync(weekStart);
             if (rowIndex == -1)
@@ -246,23 +247,48 @@ public class BurnCalendarViewModel : INotifyPropertyChanged
                 return;
             }
 
-            // Read existing weekly values first
-            var (existingEat, existingEx, existingAlc) =
-                await _sheetsService.ReadWeeklyBurnColumnsAsync(rowIndex);
+            // Collect all 7 days of the week
+            var weekDays = Burn.Days
+                .Where(d => d.Date.Date >= weekStart.Date && d.Date.Date <= weekEnd.Date)
+                .OrderBy(d => d.Date.Date)
+                .ToList();
 
-            // Add 1 for each category this day qualifies for, cap at 7
-            int newEat = committedDay.NoBreakfast && committedDay.NoSnacks && committedDay.Portions
-                ? Math.Min(existingEat + 1, 7) : existingEat;
-            int newEx = committedDay.Exercise
-                ? Math.Min(existingEx + 1, 7) : existingEx;
-            int newAlc = committedDay.NoAlcohol
-                ? Math.Min(existingAlc + 1, 7) : existingAlc;
+            // Only update if we have all 7 days in the burn
+            if (weekDays.Count != 7)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[BurnSync] Week starting {weekStart:MMM d} has only {weekDays.Count} days, skipping.");
+                return;
+            }
+
+            // Calculate Exercise: total count / 7, rounded
+            int exerciseCount = weekDays.Count(d => d.Exercise);
+            int newEx = (int)Math.Round(exerciseCount / 7.0 * 7);
+
+            // Calculate Alcohol: total count / 7, rounded
+            int alcoholCount = weekDays.Count(d => d.NoAlcohol);
+            int newAlc = (int)Math.Round(alcoholCount / 7.0 * 7);
+
+            // Calculate EatHealthy: For each day, count as 1 if 3/4 food criteria met
+            // Criteria: NoBreakfast, NoSnacks, Portions, Gtbh
+            int eatCount = 0;
+            foreach (var day in weekDays)
+            {
+                int foodCriteriaMet = 0;
+                if (day.NoBreakfast) foodCriteriaMet++;
+                if (day.NoSnacks) foodCriteriaMet++;
+                if (day.Portions) foodCriteriaMet++;
+                if (day.Gtbh) foodCriteriaMet++;
+
+                if (foodCriteriaMet >= 3) eatCount++;
+            }
+            int newEat = Math.Min(eatCount, 7);
 
             await _sheetsService.UpdateWeeklyBurnColumnsAsync(rowIndex, newEat, newEx, newAlc);
 
             System.Diagnostics.Debug.WriteLine(
                 $"[BurnSync] Row {rowIndex} ({weekStart:MMM d}) → " +
-                $"Eat={existingEat}→{newEat} Ex={existingEx}→{newEx} Alc={existingAlc}→{newAlc}");
+                $"Eat={newEat} Ex={newEx} Alc={newAlc}");
         }
         catch (Exception ex)
         {

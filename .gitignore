@@ -71,6 +71,7 @@ Thumbs.db
 # Secrets and credentials
 credentials.json
 credentials_windows.json
+SkinnyB/Resources/Raw/credentials_android.json
 appsettings.json
 appsettings.Development.json
 appsettings.*.json
