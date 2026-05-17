@@ -49,6 +49,15 @@ public static class GoogleAuthService
         await EnsureEnvLoadedAsync();
         System.Diagnostics.Debug.WriteLine("[Auth] LoginAsync called");
 
+        // Check network connectivity first
+        var current = Connectivity.Current;
+        if (current.NetworkAccess != NetworkAccess.Internet)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Auth] No internet connection. NetworkAccess: {current.NetworkAccess}");
+            return false;
+        }
+        System.Diagnostics.Debug.WriteLine($"[Auth] Network connectivity OK: {current.NetworkAccess}");
+
         _codeVerifier = GenerateCodeVerifier();
         string codeChallenge = GenerateCodeChallenge(_codeVerifier);
         string state = Guid.NewGuid().ToString("N");
@@ -83,7 +92,12 @@ public static class GoogleAuthService
         string? code = query["code"];
         if (string.IsNullOrWhiteSpace(code)) return false;
 
-        using var http = new HttpClient(new HttpClientHandler());
+        using var handler = new HttpClientHandler();
+        #if ANDROID
+        // On Android, use the system's native handler
+        handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
+        #endif
+        using var http = new HttpClient(handler);
         var body = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["code"] = code,
@@ -94,22 +108,52 @@ public static class GoogleAuthService
             ["code_verifier"] = _codeVerifier!
         });
 
-        var response = await http.PostAsync("https://oauth2.googleapis.com/token", body);
-        var json = await response.Content.ReadAsStringAsync();
-        System.Diagnostics.Debug.WriteLine($"[Auth] Token response: {json}");
-
-        string? refreshToken = ExtractJsonValue(json, "refresh_token");
-        System.Diagnostics.Debug.WriteLine($"[Auth] Extracted refresh token: '{refreshToken?.Substring(0, Math.Min(10, refreshToken?.Length ?? 0))}...'");
-
-        if (string.IsNullOrWhiteSpace(refreshToken))
+        try
         {
-            System.Diagnostics.Debug.WriteLine("[Auth] No refresh token in response — returning false");
+            var response = await http.PostAsync("https://oauth2.googleapis.com/token", body);
+            var json = await response.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine($"[Auth] Token response status: {response.StatusCode}");
+            System.Diagnostics.Debug.WriteLine($"[Auth] Token response body: {json}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Auth] HTTP {response.StatusCode}: Request failed");
+                return false;
+            }
+
+            // Check for error in response
+            string? error = ExtractJsonValue(json, "error");
+            if (!string.IsNullOrEmpty(error))
+            {
+                string? errorDesc = ExtractJsonValue(json, "error_description");
+                System.Diagnostics.Debug.WriteLine($"[Auth] ERROR from Google: {error} - {errorDesc}");
+                return false;
+            }
+
+            string? refreshToken = ExtractJsonValue(json, "refresh_token");
+            System.Diagnostics.Debug.WriteLine($"[Auth] Extracted refresh token: '{refreshToken?.Substring(0, Math.Min(10, refreshToken?.Length ?? 0))}...'");
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                System.Diagnostics.Debug.WriteLine("[Auth] No refresh token in response — returning false");
+                return false;
+            }
+
+            await SecureStorage.Default.SetAsync(TokenKey, refreshToken);
+            System.Diagnostics.Debug.WriteLine("[Auth] Refresh token saved to SecureStorage");
+            return true;
+        }
+        catch (HttpRequestException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Auth] Network error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[Auth] Inner exception: {ex.InnerException?.Message}");
             return false;
         }
-
-        await SecureStorage.Default.SetAsync(TokenKey, refreshToken);
-        System.Diagnostics.Debug.WriteLine("[Auth] Refresh token saved to SecureStorage");
-        return true;
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Auth] Unexpected error during token exchange: {ex.Message}");
+            return false;
+        }
     }
 
     private static async Task<string?> ListenForCallbackAsync()
