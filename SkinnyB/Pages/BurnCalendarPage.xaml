@@ -179,22 +179,8 @@
                                                       Dark={StaticResource SurfaceDark}}"
                     Stroke="Transparent"
                     StrokeShape="RoundRectangle 12">
-                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                         <VerticalStackLayout Grid.Column="0" Spacing="2">
-                            <Label
-                                FontAttributes="Bold"
-                                FontSize="20"
-                                HorizontalTextAlignment="Center"
-                                Text="{Binding Burn.DaysTracked}"
-                                TextColor="{StaticResource BurnOrange}" />
-                            <Label
-                                FontAttributes="Bold"
-                                FontSize="10"
-                                HorizontalTextAlignment="Center"
-                                Text="DAYS"
-                                TextColor="{StaticResource Muted}" />
-                        </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="1" Spacing="2">
                             <Label
                                 FontAttributes="Bold"
                                 FontSize="20"
@@ -213,7 +199,7 @@
                                 Text="SCORE"
                                 TextColor="{StaticResource Muted}" />
                         </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="2" Spacing="2">
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
                             <Label
                                 FontAttributes="Bold"
                                 FontSize="20"

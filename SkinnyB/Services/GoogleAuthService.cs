@@ -88,9 +88,17 @@ public static class GoogleAuthService
         string? callbackUri = await listenerTask.WaitAsync(TimeSpan.FromMinutes(5));
         if (string.IsNullOrWhiteSpace(callbackUri)) return false;
 
+        System.Diagnostics.Debug.WriteLine("[Auth] Callback URI obtained, parsing code...");
+
         var query = System.Web.HttpUtility.ParseQueryString(new Uri(callbackUri).Query);
         string? code = query["code"];
         if (string.IsNullOrWhiteSpace(code)) return false;
+
+        System.Diagnostics.Debug.WriteLine($"[Auth] Authorization code extracted: {code.Substring(0, Math.Min(20, code.Length))}...");
+
+        // Add a small delay to ensure listener is fully closed
+        await Task.Delay(500);
+        System.Diagnostics.Debug.WriteLine("[Auth] Listener cleanup delay complete");
 
         using var handler = new HttpClientHandler();
         #if ANDROID
@@ -98,6 +106,7 @@ public static class GoogleAuthService
         handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
         #endif
         using var http = new HttpClient(handler);
+        
         var body = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["code"] = code,
@@ -108,9 +117,13 @@ public static class GoogleAuthService
             ["code_verifier"] = _codeVerifier!
         });
 
+        System.Diagnostics.Debug.WriteLine("[Auth] About to POST to oauth2.googleapis.com/token...");
+
         try
         {
+            System.Diagnostics.Debug.WriteLine("[Auth] Making HTTP POST request...");
             var response = await http.PostAsync("https://oauth2.googleapis.com/token", body);
+            System.Diagnostics.Debug.WriteLine("[Auth] HTTP POST completed, reading response...");
             var json = await response.Content.ReadAsStringAsync();
             System.Diagnostics.Debug.WriteLine($"[Auth] Token response status: {response.StatusCode}");
             System.Diagnostics.Debug.WriteLine($"[Auth] Token response body: {json}");
@@ -181,6 +194,7 @@ public static class GoogleAuthService
             await context.Response.OutputStream.WriteAsync(buffer);
             context.Response.Close();
 
+            System.Diagnostics.Debug.WriteLine("[Auth] Response sent, returning callback URL");
             return callbackUrl;
         }
         catch (Exception ex)
@@ -190,8 +204,11 @@ public static class GoogleAuthService
         }
         finally
         {
+            System.Diagnostics.Debug.WriteLine("[Auth] Stopping listener...");
             try { listener.Stop(); } catch { }
+            try { listener.Close(); } catch { }
             _activeListener = null;
+            System.Diagnostics.Debug.WriteLine("[Auth] Listener stopped and cleaned up");
         }
     }
 

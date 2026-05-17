@@ -124,7 +124,7 @@ public class BurnViewModel : INotifyPropertyChanged
             _currentWeight = metaData.CurrentWeight;
 
             ((Command) LaunchBurnCommand).ChangeCanExecute();
-}
+        }
         catch (Exception ex)
         {
             ErrorMessage = $"Could not load burns: {ex.Message}";
@@ -166,7 +166,6 @@ public class BurnViewModel : INotifyPropertyChanged
     }
 
     // INotifyPropertyChanged 
-
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged([CallerMemberName] string? name = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
