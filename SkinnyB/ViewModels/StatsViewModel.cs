@@ -37,15 +37,6 @@ public class StatsViewModel : INotifyPropertyChanged
 
     private const string RefreshTokenKey = "google_refresh_token";
 
-    private string _refreshToken = string.Empty;
-    public string RefreshToken
-    {
-        get => _refreshToken;
-        set { _refreshToken = value; OnPropertyChanged(); }
-    }
-
-    public ICommand SaveRefreshTokenCommand { get; }
-
     // ── Meta display ──────────────────────────────────────────────────────
 
     private MetaEntry _meta = new();
@@ -151,7 +142,6 @@ public class StatsViewModel : INotifyPropertyChanged
 
         RefreshCommand = new Command(async () => await LoadDataAsync());
         SaveGoalsCommand = new Command(async () => await SaveGoalsAsync());
-        SaveRefreshTokenCommand = new Command(async () => await SaveRefreshTokenAsync());
 
         IncrementNutritionCommand = new Command(() => NutritionGoal++);
         DecrementNutritionCommand = new Command(() => NutritionGoal--);
@@ -160,8 +150,6 @@ public class StatsViewModel : INotifyPropertyChanged
         IncrementAlcoholCommand = new Command(() => AlcoholGoal++);
         DecrementAlcoholCommand = new Command(() => AlcoholGoal--);
         LoginWithGoogleCommand = new Command(async () => await LoginWithGoogleAsync());
-
-        LoadSavedRefreshToken();
     }
 
     // ── Data loading ──────────────────────────────────────────────────────
@@ -242,46 +230,8 @@ public class StatsViewModel : INotifyPropertyChanged
 
     // ── Saving refresh token ──────────────────────────────────────────────
 
-    private async Task SaveRefreshTokenAsync()
-    {
-        if (string.IsNullOrWhiteSpace(RefreshToken))
-        {
-            ErrorMessage = "Refresh token cannot be empty.";
-            return;
-        }
-
-        try
-        {
-            await SecureStorage.Default.SetAsync(RefreshTokenKey, RefreshToken);
-            SuccessMessage = "Refresh token saved!";
-
-            // Clear message after 2 s
-            _ = Task.Delay(2000).ContinueWith(_ =>
-            {
-                SuccessMessage = null;
-            }, TaskScheduler.FromCurrentSynchronizationContext());
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Failed to save token: {ex.Message}";
-        }
-    }
-
-    private void LoadSavedRefreshToken()
-    {
-        try
-        {
-            var saved = SecureStorage.Default.GetAsync(RefreshTokenKey).Result;
-            if (!string.IsNullOrEmpty(saved))
-            {
-                RefreshToken = saved;
-            }
-        }
-        catch
-        {
-            // Silently fail if no token is saved
-        }
-    }
+    // Removed: manual refresh token entry is no longer needed
+    // OAuth flow handles token management automatically
 
     // ── Helpers ───────────────────────────────────────────────────────────
 

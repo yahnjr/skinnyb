@@ -774,56 +774,60 @@ public class GoogleSheetsService
     }
 
 #if ANDROID
-    private async Task InitialiseWithRefreshTokenAsync()
+private async Task InitialiseWithRefreshTokenAsync()
+{
+    // Load env if not already done
+    await GoogleAuthService.EnsureEnvLoadedAsync();
+
+    string? refreshToken = null;
+    try
     {
-        using var stream = await FileSystem.OpenAppPackageFileAsync("credentials_windows.json");
-        using var jsonStream = new MemoryStream();
-        await stream.CopyToAsync(jsonStream);
-        jsonStream.Position = 0;
-
-        var secrets = GoogleClientSecrets.FromStream(jsonStream).Secrets;
-
-        // Try to read from secure storage first (set via UI), then fallback to environment variable
-        string? refreshToken = null;
-        try
-        {
-            refreshToken = await SecureStorage.Default.GetAsync("google_refresh_token");
-            System.Diagnostics.Debug.WriteLine($"[Sheets] Token from SecureStorage: '{refreshToken?.Substring(0, Math.Min(10, refreshToken?.Length ?? 0))}...'");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"[Sheets] SecureStorage read failed: {ex.Message}");
-        }
-
-        refreshToken ??= Environment.GetEnvironmentVariable("GOOGLE_REFRESH_TOKEN");
-
-        if (string.IsNullOrWhiteSpace(refreshToken))
-        {
-            throw new InvalidOperationException(
-                "No refresh token found. Please save a refresh token via the Stats page.");
-        }
-
-        var token = new Google.Apis.Auth.OAuth2.Responses.TokenResponse
-        {
-            RefreshToken = refreshToken
-        };
-
-        var credential = new UserCredential(
-            new Google.Apis.Auth.OAuth2.Flows.GoogleAuthorizationCodeFlow(
-                new Google.Apis.Auth.OAuth2.Flows.GoogleAuthorizationCodeFlow.Initializer
-                {
-                    ClientSecrets = secrets,
-                    Scopes = Scopes
-                }),
-            "user",
-            token);
-
-        _service = new SheetsService(new BaseClientService.Initializer
-        {
-            HttpClientInitializer = credential,
-            ApplicationName = AppName
-        });
+        refreshToken = await SecureStorage.Default.GetAsync("google_refresh_token");
+        System.Diagnostics.Debug.WriteLine($"[Sheets] Token from SecureStorage: '{refreshToken?.Substring(0, Math.Min(10, refreshToken?.Length ?? 0))}...'");
     }
+    catch (Exception ex)
+    {
+        System.Diagnostics.Debug.WriteLine($"[Sheets] SecureStorage read failed: {ex.Message}");
+    }
+
+    refreshToken ??= Environment.GetEnvironmentVariable("GOOGLE_REFRESH_TOKEN");
+
+    if (string.IsNullOrWhiteSpace(refreshToken))
+        throw new InvalidOperationException(
+            "No refresh token found. Please sign in via the Stats page.");
+
+    string clientId     = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID") ?? "";
+    string clientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET") ?? "";
+
+    if (string.IsNullOrWhiteSpace(clientId))
+        throw new InvalidOperationException("GOOGLE_CLIENT_ID not found in env.");
+
+    var token = new Google.Apis.Auth.OAuth2.Responses.TokenResponse
+    {
+        RefreshToken = refreshToken
+    };
+
+    var flow = new Google.Apis.Auth.OAuth2.Flows.GoogleAuthorizationCodeFlow(
+        new Google.Apis.Auth.OAuth2.Flows.GoogleAuthorizationCodeFlow.Initializer
+        {
+            ClientSecrets = new ClientSecrets
+            {
+                ClientId     = clientId,
+                ClientSecret = clientSecret
+            },
+            Scopes = Scopes
+        });
+
+    var credential = new UserCredential(flow, "user", token);
+
+    _service = new SheetsService(new BaseClientService.Initializer
+    {
+        HttpClientInitializer = credential,
+        ApplicationName = AppName
+    });
+
+    System.Diagnostics.Debug.WriteLine("[Sheets] Service initialised from env credentials.");
+}
 #endif
 
     private static bool TryParseDate(string? raw, out DateTime result)
