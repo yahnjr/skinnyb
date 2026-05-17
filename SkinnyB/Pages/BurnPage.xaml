@@ -113,12 +113,8 @@
                                     </Grid>
 
                                     <!--  Stats  -->
-                                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
                                         <VerticalStackLayout Grid.Column="0" Spacing="2">
-                                            <Label Style="{StaticResource StatValue}" Text="{Binding DaysTracked}" />
-                                            <Label Style="{StaticResource StatLabel}" Text="DAYS" />
-                                        </VerticalStackLayout>
-                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
                                             <Label Style="{StaticResource StatValue}" TextColor="{StaticResource AccentLight}">
                                                 <Label.Text>
                                                     <MultiBinding StringFormat="{}{0:0.#}%">
@@ -128,7 +124,7 @@
                                             </Label>
                                             <Label Style="{StaticResource StatLabel}" Text="SCORE" />
                                         </VerticalStackLayout>
-                                        <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
                                             <Label Style="{StaticResource StatValue}">
                                                 <Label.Text>
                                                     <MultiBinding StringFormat="{}{0}/{1}">
@@ -139,7 +135,7 @@
                                             </Label>
                                             <Label Style="{StaticResource StatLabel}" Text="PTS" />
                                         </VerticalStackLayout>
-                                        <VerticalStackLayout Grid.Column="3" Spacing="2">
+                                        <VerticalStackLayout Grid.Column="2" Spacing="2">
                                             <Label
                                                 Style="{StaticResource StatValue}"
                                                 Text="{Binding WeightChangeDisplay}"

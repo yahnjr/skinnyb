@@ -37,15 +37,6 @@ public class StatsViewModel : INotifyPropertyChanged
 
     private const string RefreshTokenKey = "google_refresh_token";
 
-    private string _refreshToken = string.Empty;
-    public string RefreshToken
-    {
-        get => _refreshToken;
-        set { _refreshToken = value; OnPropertyChanged(); }
-    }
-
-    public ICommand SaveRefreshTokenCommand { get; }
-
     // ── Meta display ──────────────────────────────────────────────────────
 
     private MetaEntry _meta = new();
@@ -101,6 +92,37 @@ public class StatsViewModel : INotifyPropertyChanged
     public bool HasWeightData => WeightHistory.Count >= 2;
     public bool HasNoWeightData => !HasWeightData;
 
+    private async Task LoginWithGoogleAsync()
+    {
+        System.Diagnostics.Debug.WriteLine("[Auth] LoginWithGoogleAsync called");
+        try
+        {
+            IsLoading = true;
+            bool success = await GoogleAuthService.LoginAsync();
+            if (success)
+            {
+                await Task.Delay(500);
+                _sheetsService.ResetService();
+                SuccessMessage = "Signed in successfully.";
+                await Task.Delay(2000);
+                SuccessMessage = null;
+                await LoadDataAsync();
+            }
+            else
+            {
+                ErrorMessage = "Sign-in failed or was cancelled.";
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Auth] EXCEPTION: {ex}");
+            ErrorMessage = $"Login error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
     // ── Commands ──────────────────────────────────────────────────────────
 
     public ICommand RefreshCommand { get; }
@@ -111,6 +133,8 @@ public class StatsViewModel : INotifyPropertyChanged
     public ICommand DecrementExerciseCommand { get; }
     public ICommand IncrementAlcoholCommand { get; }
     public ICommand DecrementAlcoholCommand { get; }
+    
+    public ICommand LoginWithGoogleCommand { get; }
 
     public StatsViewModel(GoogleSheetsService sheetsService)
     {
@@ -118,7 +142,6 @@ public class StatsViewModel : INotifyPropertyChanged
 
         RefreshCommand = new Command(async () => await LoadDataAsync());
         SaveGoalsCommand = new Command(async () => await SaveGoalsAsync());
-        SaveRefreshTokenCommand = new Command(async () => await SaveRefreshTokenAsync());
 
         IncrementNutritionCommand = new Command(() => NutritionGoal++);
         DecrementNutritionCommand = new Command(() => NutritionGoal--);
@@ -126,8 +149,7 @@ public class StatsViewModel : INotifyPropertyChanged
         DecrementExerciseCommand = new Command(() => ExerciseGoal--);
         IncrementAlcoholCommand = new Command(() => AlcoholGoal++);
         DecrementAlcoholCommand = new Command(() => AlcoholGoal--);
-
-        LoadSavedRefreshToken();
+        LoginWithGoogleCommand = new Command(async () => await LoginWithGoogleAsync());
     }
 
     // ── Data loading ──────────────────────────────────────────────────────
@@ -208,46 +230,8 @@ public class StatsViewModel : INotifyPropertyChanged
 
     // ── Saving refresh token ──────────────────────────────────────────────
 
-    private async Task SaveRefreshTokenAsync()
-    {
-        if (string.IsNullOrWhiteSpace(RefreshToken))
-        {
-            ErrorMessage = "Refresh token cannot be empty.";
-            return;
-        }
-
-        try
-        {
-            await SecureStorage.Default.SetAsync(RefreshTokenKey, RefreshToken);
-            SuccessMessage = "Refresh token saved!";
-
-            // Clear message after 2 s
-            _ = Task.Delay(2000).ContinueWith(_ =>
-            {
-                SuccessMessage = null;
-            }, TaskScheduler.FromCurrentSynchronizationContext());
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Failed to save token: {ex.Message}";
-        }
-    }
-
-    private void LoadSavedRefreshToken()
-    {
-        try
-        {
-            var saved = SecureStorage.Default.GetAsync(RefreshTokenKey).Result;
-            if (!string.IsNullOrEmpty(saved))
-            {
-                RefreshToken = saved;
-            }
-        }
-        catch
-        {
-            // Silently fail if no token is saved
-        }
-    }
+    // Removed: manual refresh token entry is no longer needed
+    // OAuth flow handles token management automatically
 
     // ── Helpers ───────────────────────────────────────────────────────────
 
