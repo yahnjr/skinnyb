@@ -261,13 +261,13 @@ public class BurnCalendarViewModel : INotifyPropertyChanged
                 return;
             }
 
-            // Calculate Exercise: count days with exercise, capped at 7
+            // Calculate Exercise: total count / 7, rounded
             int exerciseCount = weekDays.Count(d => d.Exercise);
-            int newEx = Math.Min(exerciseCount, 7);
+            int newEx = (int)Math.Round(exerciseCount / 7.0 * 7);
 
-            // Calculate Alcohol: count days avoiding alcohol, capped at 7
+            // Calculate Alcohol: total count / 7, rounded
             int alcoholCount = weekDays.Count(d => d.NoAlcohol);
-            int newAlc = Math.Min(alcoholCount, 7);
+            int newAlc = (int)Math.Round(alcoholCount / 7.0 * 7);
 
             // Calculate EatHealthy: For each day, count as 1 if 3/4 food criteria met
             // Criteria: NoBreakfast, NoSnacks, Portions, Gtbh
