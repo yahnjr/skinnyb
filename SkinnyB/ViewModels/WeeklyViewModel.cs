@@ -66,6 +66,15 @@ public class WeeklyViewModel : INotifyPropertyChanged
 
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
+    private string? _successMessage;
+    public string? SuccessMessage
+    {
+        get => _successMessage;
+        private set { _successMessage = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasSuccess)); }
+    }
+
+    public bool HasSuccess => !string.IsNullOrWhiteSpace(SuccessMessage);
+
     // SCOREBOARD — progress bars 
 
     public int ThisWeekTotal
@@ -185,13 +194,26 @@ public class WeeklyViewModel : INotifyPropertyChanged
     // Constructor & commands
 
     public ICommand RefreshCommand { get; }
+    public ICommand AddOneToCurrentWeekCommand { get; }
 
     public WeeklyViewModel(GoogleSheetsService sheetsService)
     {
         _sheetsService = sheetsService;
         RefreshCommand = new Command(async () => await LoadDataAsync());
+        AddOneToCurrentWeekCommand = new Command(AddOneToCurrentWeek);
         RefreshWorkoutsCommand = new Command(async () => await LoadWorkoutsAsync());
         OpenWorkoutCommand = new Command<WorkoutEntry>(async w => await OnOpenWorkoutAsync(w));
+    }
+
+    private void AddOneToCurrentWeek()
+    {
+        DateTime currentWeek = GoogleSheetsService.GetWeekStartOf(DateTime.Today);
+        var entry = Weeks.FirstOrDefault(w => w.WeekStartDate.Date == currentWeek.Date);
+        if (entry is null) return;
+
+        entry.EatHealthy++;
+        entry.Exercise++;
+        entry.AvoidAlcohol++;
     }
 
     // Data loading
@@ -270,7 +292,14 @@ public class WeeklyViewModel : INotifyPropertyChanged
 
     public async Task SaveEntryAsync(WeekEntry entry)
     {
-        try { await _sheetsService.UpdateRowAsync(entry); }
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            await _sheetsService.UpdateRowAsync(entry);
+            ShowSaveSuccess();
+        }
         catch (Exception ex) { ErrorMessage = $"Save failed: {ex.Message}"; }
     }
 
@@ -279,10 +308,28 @@ public class WeeklyViewModel : INotifyPropertyChanged
         if (IsLoading) return;
         IsLoading = true;
         ErrorMessage = null;
+        SuccessMessage = null;
 
-        try { await _sheetsService.UpdateAllRowsAsync(Weeks.ToList()); }
+        try
+        {
+            await _sheetsService.UpdateAllRowsAsync(Weeks.ToList());
+            ShowSaveSuccess();
+        }
         catch (Exception ex) { ErrorMessage = $"Save failed: {ex.Message}"; }
         finally { IsLoading = false; }
+    }
+
+    private void ShowSaveSuccess()
+    {
+        const string message = "Weekly data saved.";
+        SuccessMessage = message;
+        _ = ClearSuccessMessageAsync(message);
+    }
+
+    private async Task ClearSuccessMessageAsync(string message)
+    {
+        await Task.Delay(2500);
+        if (SuccessMessage == message) SuccessMessage = null;
     }
 
     // Helpers

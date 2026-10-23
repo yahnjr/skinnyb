@@ -6,7 +6,7 @@ public class MetaEntry
     public double? CurrentWeight { get; set; }
     public double? AllTimeAverageScore { get; set; }
 
-    // Goals — stored in Sheet1!Q4:S4, defaulting to 5/3/5
+    // Goals are stored in the spreadsheet's metadata row, defaulting to 5/3/5.
     public int NutritionGoal { get; set; } = 5;
     public int ExerciseGoal { get; set; } = 3;
     public int AlcoholGoal { get; set; } = 5;

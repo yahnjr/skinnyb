@@ -157,6 +157,15 @@ public class BurnCalendarViewModel : INotifyPropertyChanged
 
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
+    private string? _successMessage;
+    public string? SuccessMessage
+    {
+        get => _successMessage;
+        private set { _successMessage = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasSuccess)); }
+    }
+
+    public bool HasSuccess => !string.IsNullOrWhiteSpace(SuccessMessage);
+
     // Set of row indices that have been edited since last save
     private readonly HashSet<int> _dirtyRows = [];
     public bool HasUnsavedChanges => _dirtyRows.Count > 0;
@@ -166,6 +175,7 @@ public class BurnCalendarViewModel : INotifyPropertyChanged
     public ICommand SelectDayCommand { get; }
     public ICommand CommitDayCommand { get; }   // apply edits to the in-memory entry
     public ICommand DismissDayCommand { get; }
+    public ICommand CheckAllCommand { get; }
     public ICommand SaveCommand { get; }
 
     public BurnCalendarViewModel(BurnEntry burn, GoogleSheetsService sheetsService)
@@ -176,6 +186,7 @@ public class BurnCalendarViewModel : INotifyPropertyChanged
         SelectDayCommand = new Command<CalendarCell>(OnSelectDay);
         CommitDayCommand = new Command(OnCommitDay);
         DismissDayCommand = new Command(OnDismissDay);
+        CheckAllCommand = new Command(CheckAll);
         OpenWorkoutCommand = new Command(async () => await OnOpenWorkoutAsync());
         SaveCommand = new Command(async () => await SaveAsync(),
                                         () => HasUnsavedChanges && !IsLoading);
@@ -336,6 +347,18 @@ public class BurnCalendarViewModel : INotifyPropertyChanged
         SelectedDay = null;
     }
 
+    private void CheckAll()
+    {
+        if (SelectedDay is null) return;
+
+        EditNoBreakfast = true;
+        EditNoSnacks = true;
+        EditPortions = true;
+        EditNoAlcohol = true;
+        EditExercise = true;
+        EditGtbh = true;
+    }
+
 
     // Load and open workouts
     public async Task LoadWorkoutsAsync()
@@ -374,6 +397,7 @@ public class BurnCalendarViewModel : INotifyPropertyChanged
         if (IsLoading) return;
         IsLoading = true;
         ErrorMessage = null;
+        SuccessMessage = null;
 
         try
         {
@@ -386,6 +410,9 @@ public class BurnCalendarViewModel : INotifyPropertyChanged
             _dirtyRows.Clear();
             OnPropertyChanged(nameof(HasUnsavedChanges));
             ((Command)SaveCommand).ChangeCanExecute();
+            const string message = "BURN changes saved.";
+            SuccessMessage = message;
+            _ = ClearSuccessMessageAsync(message);
         }
         catch (Exception ex)
         {
@@ -395,6 +422,12 @@ public class BurnCalendarViewModel : INotifyPropertyChanged
         {
             IsLoading = false;
         }
+    }
+
+    private async Task ClearSuccessMessageAsync(string message)
+    {
+        await Task.Delay(2500);
+        if (SuccessMessage == message) SuccessMessage = null;
     }
 
     // INotifyPropertyChanged

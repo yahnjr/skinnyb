@@ -50,6 +50,19 @@
                         TextColor="{StaticResource Danger}" />
                 </Border>
 
+                    <Border
+                        Margin="0,0,0,12"
+                        Padding="12,8"
+                        BackgroundColor="#EDF7F1"
+                        IsVisible="{Binding HasSuccess}"
+                        Stroke="#A8D5A2"
+                        StrokeShape="RoundRectangle 8">
+                        <Label
+                        FontSize="13"
+                        Text="{Binding SuccessMessage}"
+                        TextColor="{StaticResource Accent}" />
+                    </Border>
+
                 <!--  ── Day-of-week headers ──────────────────────────  -->
                 <Grid Margin="0,0,0,4" ColumnDefinitions="*,*,*,*,*,*,*">
                     <Label
@@ -277,6 +290,13 @@
                     </Grid>
 
                     <!--  Habit checkboxes — 3 col × 2 row grid  -->
+                    <Button
+                        BackgroundColor="{AppThemeBinding Light=#EBEBEB, Dark=#2A2A28}"
+                        Command="{Binding CheckAllCommand}"
+                        CornerRadius="8"
+                        Text="Check all for this day"
+                        TextColor="{StaticResource Accent}" />
+
                     <Grid
                         ColumnDefinitions="*,*,*"
                         ColumnSpacing="8"
@@ -433,7 +453,7 @@
                                 HeightRequest="48"
                                 Text="{Binding SelectedDay.WorkoutNum}"
                                 TextColor="White"
-                                WidthRequest="48" />
+                                WidthRequest="64" />
                         </Grid>
                     </Border>
 

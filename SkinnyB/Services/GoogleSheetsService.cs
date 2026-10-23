@@ -11,9 +11,12 @@ public class GoogleSheetsService
 {
     private static string SpreadsheetId => 
         Environment.GetEnvironmentVariable("SPREADSHEET_ID") ?? "";
-    // private const string DataRange = "Sheet1!A2:F";
+    private const string SheetTabName = "Fitness";
     private const string AppName = "SkinnyB";
     private int workoutVideoCount = 41;
+
+    private static string SheetRange(string range) =>
+        $"'{SheetTabName.Replace("'", "''")}'!{range}";
 
     private static readonly string[] Scopes =
     [
@@ -77,11 +80,11 @@ public class GoogleSheetsService
     {
         await EnsureInitializedAsync();
 
-        var countRequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, "Sheet1!A2:A");
+        var countRequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, SheetRange("A2:A"));
         var countResponse = await countRequest.ExecuteAsync();
         int totalRows = countResponse.Values?.Count ?? 0;
         int startRow = Math.Max(2, totalRows - maxRows + 2);
-        string range = $"Sheet1!A{startRow}:F";
+        string range = SheetRange($"A{startRow}:F");
 
         var request = _service!.Spreadsheets.Values.Get(SpreadsheetId, range);
         ValueRange response = await request.ExecuteAsync();
@@ -131,13 +134,13 @@ public class GoogleSheetsService
         await EnsureInitializedAsync();
 
         // Row 2: mode, current weight, all-time average
-        const string MetaRange = "Sheet1!Q2:S2";
+        string MetaRange = SheetRange("Q2:S2");
         var metaRequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, MetaRange);
         var metaResponse = await metaRequest.ExecuteAsync();
         var metaRow = metaResponse.Values?.FirstOrDefault();
 
         // Row 4: nutrition goal, exercise goal, alcohol goal
-        const string GoalsRange = "Sheet1!Q4:S4";
+        string GoalsRange = SheetRange("Q4:S4");
         var goalsRequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, GoalsRange);
         var goalsResponse = await goalsRequest.ExecuteAsync();
         var goalsRow = goalsResponse.Values?.FirstOrDefault();
@@ -165,7 +168,7 @@ public class GoogleSheetsService
     {
         await EnsureInitializedAsync();
 
-        const string BurnRange = "Sheet1!G1:P";
+        string BurnRange = SheetRange("G1:P");
         var request = _service!.Spreadsheets.Values.Get(SpreadsheetId, BurnRange);
         ValueRange response = await request.ExecuteAsync();
         IList<IList<object>> rows = response.Values ?? [];
@@ -253,7 +256,7 @@ public class GoogleSheetsService
         int rowIndex = await FindSheetRowAsync(entry.WeekStartDate);
         if (rowIndex == -1) return;
 
-        string range = $"Sheet1!B{rowIndex}:F{rowIndex}";
+        string range = SheetRange($"B{rowIndex}:F{rowIndex}");
         var valueRange = new ValueRange
         {
             Values = new List<IList<object>>
@@ -292,7 +295,7 @@ public class GoogleSheetsService
         var existing = entries.Where(e => !e.IsNew).OrderBy(e => e.WeekStartDate).ToList();
         if (existing.Count == 0) return;
 
-        var dateRequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, "Sheet1!A2:A");
+        var dateRequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, SheetRange("A2:A"));
         var dateResponse = await dateRequest.ExecuteAsync();
         var dateRows = dateResponse.Values ?? [];
 
@@ -314,7 +317,7 @@ public class GoogleSheetsService
                 continue;
             }
 
-            string rowRange = $"Sheet1!B{rowIdx}:F{rowIdx}";
+            string rowRange = SheetRange($"B{rowIdx}:F{rowIdx}");
             var rowValueRange = new ValueRange
             {
                 Values = new List<IList<object>>
@@ -351,7 +354,7 @@ public class GoogleSheetsService
         {
             if (day.SheetRowIndex <= 0) continue;
 
-            string range = $"Sheet1!I{day.SheetRowIndex}:P{day.SheetRowIndex}";
+            string range = SheetRange($"I{day.SheetRowIndex}:P{day.SheetRowIndex}");
             var valueRange = new ValueRange
             {
                 Values = new List<IList<object>>
@@ -395,7 +398,7 @@ public class GoogleSheetsService
         DateTime startDate = DateTime.Today;
         int numDays = 30;
 
-        const string DateColumnRange = "Sheet1!H2:H";
+        string DateColumnRange = SheetRange("H2:H");
         var dateRequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, DateColumnRange);
         var dateResponse = await dateRequest.ExecuteAsync();
         var dateRows = dateResponse.Values ?? [];
@@ -431,7 +434,7 @@ public class GoogleSheetsService
             });
         }
 
-        string burnDataRange = $"Sheet1!G{burnStartRow}:P{burnStartRow + numDays - 1}";
+        string burnDataRange = SheetRange($"G{burnStartRow}:P{burnStartRow + numDays - 1}");
         var burnValueRange = new ValueRange { Values = burnDays };
         var burnWriteRequest = _service.Spreadsheets.Values.Update(
             burnValueRange, SpreadsheetId, burnDataRange);
@@ -463,7 +466,7 @@ public class GoogleSheetsService
     {
         await EnsureInitializedAsync();
 
-        const string MetaRange = "Sheet1!Q2:S2";
+        string MetaRange = SheetRange("Q2:R2");
         var valueRange = new ValueRange
         {
             Values = new List<IList<object>>
@@ -471,8 +474,7 @@ public class GoogleSheetsService
                 new List<object>
                 {
                     currentMode,
-                    currentWeight?.ToString() ?? "",
-                    ""
+                    currentWeight?.ToString() ?? ""
                 }
             }
         };
@@ -487,7 +489,7 @@ public class GoogleSheetsService
     {
         await EnsureInitializedAsync();
 
-        const string GoalsRange = "Sheet1!Q4:S4";
+        string GoalsRange = SheetRange("Q4:S4");
         var valueRange = new ValueRange
         {
             Values = new List<IList<object>>
@@ -512,7 +514,7 @@ public class GoogleSheetsService
     {
         await EnsureInitializedAsync();
 
-        var request = _service!.Spreadsheets.Values.Get(SpreadsheetId, "Sheet1!A2:F");
+        var request = _service!.Spreadsheets.Values.Get(SpreadsheetId, SheetRange("A2:F"));
         var response = await request.ExecuteAsync();
         var rows = response.Values ?? [];
 
@@ -538,7 +540,7 @@ public class GoogleSheetsService
 
     private async Task<int> FindSheetRowAsync(DateTime weekStart)
     {
-        var dateRequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, "Sheet1!A2:A");
+        var dateRequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, SheetRange("A2:A"));
         var dateResponse = await dateRequest.ExecuteAsync();
         var dateRows = dateResponse.Values ?? [];
 
@@ -570,7 +572,7 @@ public class GoogleSheetsService
             }
         };
 
-        var colARequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, "Sheet1!A2:A");
+        var colARequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, SheetRange("A2:A"));
         var colAResponse = await colARequest.ExecuteAsync();
         var colARows = colAResponse.Values ?? [];
 
@@ -585,7 +587,7 @@ public class GoogleSheetsService
         }
 
         int targetRow = lastWeeklyRow + 1;
-        string writeRange = $"Sheet1!A{targetRow}:F{targetRow}";
+        string writeRange = SheetRange($"A{targetRow}:F{targetRow}");
 
         var writeRequest = _service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, writeRange);
         writeRequest.ValueInputOption =
@@ -597,7 +599,7 @@ public class GoogleSheetsService
     {
         await EnsureInitializedAsync();
 
-        const string WorkoutRange = "Sheet1!U2:W42";
+        string WorkoutRange = SheetRange("U2:W42");
         var request = _service!.Spreadsheets.Values.Get(SpreadsheetId, WorkoutRange);
         request.ValueRenderOption =
             SpreadsheetsResource.ValuesResource.GetRequest.ValueRenderOptionEnum.FORMULA;
@@ -646,7 +648,7 @@ public class GoogleSheetsService
     {
         await EnsureInitializedAsync();
 
-        const string NumRange = "Sheet1!U2:U42";
+        string NumRange = SheetRange("U2:U42");
         var request = _service!.Spreadsheets.Values.Get(SpreadsheetId, NumRange);
         var response = await request.ExecuteAsync();
         var rows = response.Values ?? [];
@@ -665,7 +667,7 @@ public class GoogleSheetsService
 
         if (rowIndex == -1) return;
 
-        string countRange = $"Sheet1!W{rowIndex}";
+        string countRange = SheetRange($"W{rowIndex}");
         var countRequest = _service!.Spreadsheets.Values.Get(SpreadsheetId, countRange);
         var countResponse = await countRequest.ExecuteAsync();
         var countRow = countResponse.Values?.FirstOrDefault();
@@ -687,7 +689,7 @@ public class GoogleSheetsService
     {
         await EnsureInitializedAsync();
 
-        string range = $"Sheet1!B{rowIndex}:D{rowIndex}";
+        string range = SheetRange($"B{rowIndex}:D{rowIndex}");
         var valueRange = new ValueRange
         {
             Values = new List<IList<object>>
@@ -713,7 +715,7 @@ public class GoogleSheetsService
     {
         await EnsureInitializedAsync();
 
-        var request = _service!.Spreadsheets.Values.Get(SpreadsheetId, "Sheet1!A2:A");
+        var request = _service!.Spreadsheets.Values.Get(SpreadsheetId, SheetRange("A2:A"));
         var response = await request.ExecuteAsync();
         var rows = response.Values ?? [];
 
@@ -732,7 +734,7 @@ public class GoogleSheetsService
     {
         await EnsureInitializedAsync();
 
-        string range = $"Sheet1!B{rowIndex}:D{rowIndex}";
+        string range = SheetRange($"B{rowIndex}:D{rowIndex}");
         var request = _service!.Spreadsheets.Values.Get(SpreadsheetId, range);
         var response = await request.ExecuteAsync();
 
